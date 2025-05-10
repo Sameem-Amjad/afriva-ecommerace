@@ -7,6 +7,7 @@ import { fetchGetProductDetailsById } from "@/redux/features/products/productsTh
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+
 const Page = ({ params }) => {
   const { slug } = React.use(params);
   const dispatch = useDispatch();
