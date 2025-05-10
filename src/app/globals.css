@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  /* sm: min-width 640px */
+  html {
+    font-size: 80%;
+    /* 80% for small screens */
+  }
+}
+
+@media (min-width: 640px) {
+  /* sm: min-width 640px */
+  html {
+    font-size: 85%;
+    /* 80% for small screens */
+  }
+}
+
+@media (min-width: 768px) {
+  /* md: min-width 768px */
+  html {
+    font-size: 90%;
+    /* 90% for medium screens */
+  }
+}
+
+@media (min-width: 1024px) {
+  /* lg: min-width 1024px */
+  html {
+    font-size: 100%;
+    /* 100% for large screens and up */
+  }
+}
