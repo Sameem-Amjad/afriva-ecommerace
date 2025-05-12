@@ -17,7 +17,6 @@ const notAuthenticatedPaths = [
     "/setup-profile",
     "/email-verification",
     "/signup",
-    "/forget-password",
     "/login",
 ];
 
@@ -35,10 +34,12 @@ export default function AuthWrapper({ children }) {
                 data: { session },
             } = await supabase.auth.getSession();
             const isAuthenticated = session && session.user;
-
+            if(pathname == "/forget-password"){
+                return;
+            }
             if (isAuthenticated) {
                 dispatch(setUser(session.user));
-                if (notAuthenticatedPaths.includes(pathname)) {
+                if (notAuthenticatedPaths.includes(pathname) ) {
                     router.push("/");
                 }
             } else {

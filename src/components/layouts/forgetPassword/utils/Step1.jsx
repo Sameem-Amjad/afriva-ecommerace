@@ -1,16 +1,34 @@
 import CommonButton from "@/components/buttons/CommonButton";
 import EmailField from "@/components/fields/EmailField";
+import { sendForgotPasswordEmail } from "@/redux/features/auth/authThunk";
 import { backArrow, successIcon } from "@/utils/Svgs";
 import Link from "next/link";
 import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
-const Step1 = ({ step, setStep }) => {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-
+const Step1 = ({ step, setStep ,email,setEmail}) => {
+  
+  const dispatch = useDispatch();
+  const {loading } = useSelector((state) => state.users);
   const handleNext = () => {
-    setStep(step + 1);
+    if (!email) {
+      toast.error("Please enter your email");
+      return;
+    }
+    dispatch(
+      sendForgotPasswordEmail({ email })
+    )
+      .unwrap()
+      .then(() => {
+        toast.success("Email sent successfully");
+        setStep(step + 1);
+      })
+      .catch((error) => {
+        toast.error(error);
+      });
   };
+
 
   return (
     <div className="flex flex-col items-center">

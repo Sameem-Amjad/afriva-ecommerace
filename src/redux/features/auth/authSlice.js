@@ -10,7 +10,9 @@ import {
     logout,
     deleteAccount,
     verifyOtp,
-    signUpConfirmOtp
+    signUpConfirmOtp,
+    sendForgotPasswordEmail,
+    verifyCodeForForgotPassword
 } from "./authThunk";
 import { signUp } from "./authDB";
 
@@ -21,6 +23,7 @@ const authSlice = createSlice({
         buyers: null,
         loading: false,
         error: null,
+        isLogin:false,
         userData: {
             name: null,
             imageUrl: null,
@@ -201,6 +204,30 @@ const authSlice = createSlice({
                 state.loading = false;
              })
             .addCase(signUpConfirmOtp.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(sendForgotPasswordEmail.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(sendForgotPasswordEmail.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload;
+            })
+            .addCase(sendForgotPasswordEmail.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(verifyCodeForForgotPassword.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(verifyCodeForForgotPassword.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload.user;
+            })
+            .addCase(verifyCodeForForgotPassword.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

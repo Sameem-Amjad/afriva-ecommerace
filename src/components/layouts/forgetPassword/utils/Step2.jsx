@@ -1,18 +1,52 @@
 import CommonButton from "@/components/buttons/CommonButton";
-import EmailField from "@/components/fields/EmailField";
-import { backArrow, emailIcon, successIcon } from "@/utils/Svgs";
+import { verifyCodeForForgotPassword } from "@/redux/features/auth/authThunk";
+import { backArrow, emailIcon } from "@/utils/Svgs";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
-const Step2 = ({ step, setStep }) => {
-  const [loading, setLoading] = useState(false);
+const Step2 = ({ step, setStep ,email}) => {
+  const {loading} = useSelector((state) => state.users);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const inputsRef = useRef([]);
+  const dispatch = useDispatch();
 
-  const handleNext = () => {
-    setStep(step + 1);
+  const handleNext =async  () => {
+    const otpValue = otp.join("");
+    if (otpValue.length < 6) {
+      toast.error("Please enter a valid OTP");
+      return;
+    }
+    const response = await dispatch(verifyCodeForForgotPassword({ email,code:otpValue }));
+    if (response.error) {
+      toast.error(response.error);
+    } else {
+        toast.success("OTP verified successfully");
+        toast.success(step);
+        setStep(step + 1);
+      }
   };
 
   const handleResend = () => {
     console.log("Resend email");
+  };
+
+  const handleChange = (e, idx) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    if (value.length > 1) return;
+    const newOtp = [...otp];
+    newOtp[idx] = value;
+    setOtp(newOtp);
+    if (value && idx < 5) {
+      inputsRef.current[idx + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (e, idx) => {
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
+      inputsRef.current[idx - 1].focus();
+    }
   };
 
   return (
@@ -24,15 +58,32 @@ const Step2 = ({ step, setStep }) => {
         Check your email
       </h1>
       <p className="text-base text-text text-center">
-        We sent a password reset link to olivia@smartdelivery.com
+        Enter the OTP below to verify your email {email}.
       </p>
 
-      <div className="w-full mt-8">
+      {/* OTP Input */}
+      <div className="flex gap-2 mt-8 mb-2">
+        {otp.map((digit, idx) => (
+          <input
+            key={idx}
+            ref={el => (inputsRef.current[idx] = el)}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            value={digit}
+            onChange={e => handleChange(e, idx)}
+            onKeyDown={e => handleKeyDown(e, idx)}
+            className="w-12 h-12 text-center border rounded text-2xl outline-none focus:border-primary"
+          />
+        ))}
+      </div>
+
+      <div className="w-full mt-4">
         <CommonButton
           type="submit"
           label="Got it"
           className="py-3 mt-6 text-base "
-          disabled={loading}
+          disabled={loading }
           onClick={handleNext}
         />
       </div>

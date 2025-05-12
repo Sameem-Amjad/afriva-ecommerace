@@ -11,7 +11,9 @@ import {
     updatePassword,
     logoutUser,
     deleteUser,
-    signUpVerifyOtp
+    signUpVerifyOtp,
+    forgotPassword,
+    verifyCode
 } from "./authDB";
 import { supabase } from "../../../../supabase";
 
@@ -165,6 +167,30 @@ export const deleteAccount = createAsyncThunk(
         try {
             await deleteUser(userId);
             await supabase.auth.signOut();
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);
+
+export const sendForgotPasswordEmail = createAsyncThunk(
+    "auth/sendForgotPasswordEmail",
+    async ({email}, { rejectWithValue }) => {
+        try {
+            const response = await forgotPassword(email);
+            return response;
+        } catch (error) {
+            return rejectWithValue(error.message);
+        }
+    }
+);  
+
+export const verifyCodeForForgotPassword = createAsyncThunk(
+    "auth/verifyCodeForForgotPassword",
+    async ({email, code}, { rejectWithValue }) => {
+        try {
+            const response = await verifyCode(email, code);
+            return response;
         } catch (error) {
             return rejectWithValue(error.message);
         }

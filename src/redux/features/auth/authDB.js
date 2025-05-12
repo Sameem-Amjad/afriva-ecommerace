@@ -291,3 +291,31 @@ export const deleteUser = async (userId) => {
         throw error;
     }
 }
+
+export const forgotPassword = async (email) => {
+    try {
+        const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+        if (error) {
+            console.error("Error sending password reset email: ", error);
+            throw error;
+        }
+        return data;
+    } catch (error) {
+        console.error("Error sending password reset email: ", error);
+        throw error;
+    }
+}
+
+
+export const verifyCode = async (email, code) => {
+    const { data, error } = await supabase.auth.verifyOtp({ email: email, token: code, type: 'recovery' });
+    if (error) {
+        console.error('Error verifying OTP:', error.message);
+        return { success: false, error };
+    }
+    // if (data?.user?.id) {
+    //     await supabase.auth.signOut();
+    // }
+
+    return { success: true ,user:null};
+}
