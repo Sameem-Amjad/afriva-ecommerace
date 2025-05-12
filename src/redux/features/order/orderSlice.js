@@ -23,7 +23,9 @@ const initialState = {
             size: "",
             color: "", 
             color_code: ""
-        }
+        },
+        created_at: new Date(),
+        updated_at: new Date(),
     },
     loading: false,
     error: null,
