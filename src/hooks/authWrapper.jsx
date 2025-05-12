@@ -2,12 +2,13 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "../../supabase";
-import Loader from "@/components/Loader/Loader";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { getCartItemsThunk } from "@/redux/features/cart/cartThunk";
 import { fetchGetFavouriteProducts } from "@/redux/features/products/productsThunk";
+import dynamic from "next/dynamic";
+const Loader = dynamic(() => import("@/components/Loader/Loader"), { ssr: false });
 
 const privatePaths = ["/cart", "/wishlist", "/profile"];
 const notAuthenticatedPaths = [

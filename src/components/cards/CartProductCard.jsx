@@ -12,7 +12,7 @@ const CartProductCard = ({ product }) => {
     dispatch(removeCartItemThunk(product.cart_id));
   };
 
-
+  
   return (
     <div className="flex flex-row gap-x-4 w-full pb-6 border-b border-b-black border-opacity-10">
       <div className="flex w-[124px] h-[124px] rounded-lg bg-productBg justify-center items-center overflow-hidden">

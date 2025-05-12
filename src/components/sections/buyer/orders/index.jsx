@@ -11,7 +11,8 @@ import OrderDetailPacked from "./OrderDetailPacked";
 import LoadMoreButton from "@/components/buttons/LoadMoreButton";
 
 const Orders = () => {
-  const [state, setState] = useState("list");
+  
+  const [state, setState] = useState("list"); 
   const [orderDetail, setOrderDetail] = useState({});
   return (
     <div>

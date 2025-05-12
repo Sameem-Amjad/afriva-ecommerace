@@ -81,13 +81,15 @@ const Brands = () => {
       >
         {brandsImages?.map((brand, index) => (
           <SwiperSlide key={index}>
-            <Image
+           <div className="flex justify-center items-center h-[100px]">
+             <Image
               src={brand.logo_url || null}
               width={106.48}
               height={33.16}
               alt={brand.name}
               className="mx-auto"
             />
+           </div>
           </SwiperSlide>
         ))}
       </Swiper>

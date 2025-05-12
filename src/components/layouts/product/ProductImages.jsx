@@ -26,6 +26,8 @@ const ProductImages = ({ images }) => {
               objectFit="contain"
               width={152}
               height={167}
+              placeholder="blur"
+              blurDataURL="/images/sample1.png"
               alt="Afriva-product"
               className="w-full h-auto"
             // fill

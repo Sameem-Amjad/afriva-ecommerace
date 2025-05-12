@@ -9,6 +9,7 @@ import cartReducer from "../features/cart/cartSlice";
 import orderReducer from "../features/order/orderSlice";
 import returnReducer from "../features/return_products/returnSlice";
 import paymentReducer from "../features/payment/paymentSlice";
+import promoCodeReducer from "../features/promocode/promocodeSlice";
 const rootReducer = combineReducers({
     users: userReducer,
     home: homeReducer,
@@ -20,6 +21,7 @@ const rootReducer = combineReducers({
     orders: orderReducer,
     returnRequests: returnReducer,
     payment: paymentReducer,
+    promoCode: promoCodeReducer,
 });
 
 export default rootReducer;

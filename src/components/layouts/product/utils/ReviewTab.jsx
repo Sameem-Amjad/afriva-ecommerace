@@ -7,10 +7,10 @@ import GiveReview from "./GiveReview";
 import ReviewCard from "../../homepage/utils/ReviewCard";
 import { fetchGetProductReviewsById } from "@/redux/features/products/productsThunk";
 import { useDispatch, useSelector } from "react-redux";
-import Loader from "@/components/Loader/Loader";
 import { toast } from "sonner";
 import { resetProductReviews, setFilters } from "@/redux/features/products/productsSlice";
-
+import dynamic from "next/dynamic";
+const Loader = dynamic(() => import("@/components/Loader/Loader"), { ssr: false });
 const ReviewTab = ({ id }) => {
   const [openModal, setOpenModal] = useState(false);
   const [start, setStart] = useState(0);

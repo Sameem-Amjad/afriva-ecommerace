@@ -82,30 +82,36 @@ export const socials = [
 export const companyLinks = [
   {
     title: "About",
-    link: "/about",
+    // link: "/about",
+    link:"/"
   },
   {
     title: "Features",
-    link: "/features",
+    // link: "/features",
+    link:"/"
   },
   {
     title: "Works",
-    link: "/works",
+    // link: "/works",
+    link:"/"
   },
   {
     title: "Career",
-    link: "/career",
+    // link: "/career",
+    link:"/"
   },
 ];
 
 export const helpLinks = [
   {
     title: "Customer Support",
-    link: "/customer-support",
+    // link: "/customer-support",
+    link:"/"
   },
   {
     title: "Delivery Details",
-    link: "/delivery-details",
+    // link: "/delivery-details",
+    link:"/"
   },
   {
     title: "Terms & Conditions",
@@ -120,19 +126,20 @@ export const helpLinks = [
 export const faqLinks = [
   {
     title: "Account",
-    link: "/profile/account",
+    link: "/profile",
   },
   {
     title: "Manage Deliveries",
-    link: "/manage-deliveries",
+    // link: "/manage-deliveries",
+    link:"/"
   },
   {
     title: "Orders",
-    link: "/profile/orders",
+    link: "/profile?orders",
   },
   {
     title: "Payments",
-    link: "/profile/payments",
+    link: "/profile?paymentMethod",
   },
 ];
 

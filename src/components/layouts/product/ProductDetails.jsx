@@ -124,12 +124,16 @@ const ProductDetails = ({ product }) => {
           setQuantity={setQuantity}
           maxQuantity={selectedDetails?.quantity || 0}
         />
-
-        <RoundedButton
-          label="Add to Cart"
-          onClick={() => AddToCart(product)}
-          className="py-4 bg-primary border-primary w-fit text-white"
-        />
+        {
+          selectedDetails?.quantity === 0 || selectedDetails?.quantity === "" ? (
+            <p className="text-red-500 text-sm py-4  w-full text-center font-bold">Out of stock</p>
+          ) :
+            <RoundedButton
+              label="Add to Cart"
+              onClick={() => AddToCart(product)}
+              className="py-4 bg-primary border-primary w-fit text-white"
+            />
+        }
       </div>
     </div>
   );

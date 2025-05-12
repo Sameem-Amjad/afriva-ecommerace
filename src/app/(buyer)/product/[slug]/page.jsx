@@ -2,12 +2,12 @@
 import Breadcrumb from "@/components/layouts/product/Breadcrumb";
 import OtherDetails from "@/components/layouts/product/OtherDetails";
 import ProductWrapper from "@/components/layouts/product/ProductWrapper";
-import Loader from "@/components/Loader/Loader";
 import { fetchGetProductDetailsById } from "@/redux/features/products/productsThunk";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-
+import dynamic from "next/dynamic";
+const Loader = dynamic(() => import("@/components/Loader/Loader"), { ssr: false });
 const Page = ({ params }) => {
   const { slug } = React.use(params);
   const dispatch = useDispatch();

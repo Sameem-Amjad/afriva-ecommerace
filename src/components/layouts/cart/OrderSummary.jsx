@@ -8,8 +8,11 @@ import { setOrderDetails } from "@/redux/features/order/orderSlice";
 import { createNewOrder } from "@/redux/features/order/orderThunk";
 import { toast } from "sonner";
 import { removeCartItemThunk } from "@/redux/features/cart/cartThunk";
+import { fetchPromoCodeDiscount } from "@/redux/features/promocode/promocodeThunk";
 const OrderSummary = ({ step, setStep }) => {
   const [payment, setPayment] = React.useState(1);
+  const {user} = useSelector((state) => state.users);
+  const {promoCode}= useSelector((state) => state.promoCode);
   const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.cart);
   const { orderDetails } = useSelector((state) => state.orders);
@@ -37,6 +40,13 @@ const OrderSummary = ({ step, setStep }) => {
 
 
   const handleButton = () => {
+    const hasZeroQuantity = cartItems?.some((item) => item.quantity === 0);
+    if (hasZeroQuantity) {
+      const zeroItem = cartItems.find((item) => item.quantity === 0);
+      toast.error(`Please remove ${zeroItem?.products?.name} from cart to proceed furthur. Because it is out of stock.`);
+      return;
+    }
+
     if (step === 1) {
       setStep(2);
     } else {
@@ -76,6 +86,7 @@ const OrderSummary = ({ step, setStep }) => {
         dispatch(setOrderDetails({ field: "total", value: (price - itemDiscount) + itemDeliveryFee }));
         dispatch(setOrderDetails({ field: "total_amount", value: (price - itemDiscount) + itemDeliveryFee }));
         dispatch(setOrderDetails({ field: "created_by", value: item?.created_by }));
+        dispatch(setOrderDetails({ field: "selected_size_details", value: { qty: item.quantity, size: item.selected_size, color: sizeDetail?.colorName, color_code: "#"+item.selected_color } }));
         dispatch(createNewOrder());
         dispatch(removeCartItemThunk(item?.cart_id));
       }
@@ -109,14 +120,15 @@ const OrderSummary = ({ step, setStep }) => {
       </div>
       {step == 1 ? <></> :
         <div className="flex flex-row gap-x-3">
-          <PromoField />
+          {/* <PromoField />
 
           <div className="w-[30%]">
             <RoundedButton
               label="Apply"
+              onClick={()=>dispatch(fetchPromoCodeDiscount({ promoCode: promoCode, id: user.id}))}
               className=" bg-black border-black text-white font-medium px-6 py-3.5"
             />
-          </div>
+          </div> */}
         </div>
       }
 

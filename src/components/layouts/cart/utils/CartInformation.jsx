@@ -16,7 +16,7 @@ const CartInformation = () => {
         label="Full Name"
         name="Full Name"
         placeholder="Enter your name"
-        text={orderDetails?.user_delivery_address?.name || addressData?.name}
+        text={orderDetails?.user_delivery_address?.name}
         setText={(e) => dispatch(setOrderDetails({ field: "user_delivery_address.name", value: e.target.value }))}
       />
 
@@ -32,7 +32,7 @@ const CartInformation = () => {
         label="Street Address"
         name="Street Address"
         placeholder="Enter street address"
-        text={orderDetails?.user_delivery_address?.address || addressData?.address}
+        text={orderDetails?.user_delivery_address?.address }
         setText={(e) => dispatch(setOrderDetails({ field: "user_delivery_address.address", value: e.target.value }))}
       />
 
@@ -48,7 +48,7 @@ const CartInformation = () => {
         label="Town/City"
         name="City"
         placeholder="Enter city"
-        text={orderDetails?.user_delivery_address?.city || addressData?.city}
+        text={orderDetails?.user_delivery_address?.city }
         // setText={(e) => setCity(e.target.value)}
         setText={(e) => dispatch(setOrderDetails({ field: "user_delivery_address.city", value: e.target.value }))}
       />
@@ -57,7 +57,7 @@ const CartInformation = () => {
         label="Phone number"
         name="Phone number"
         placeholder="Enter number"
-        text={orderDetails?.user_delivery_address?.phone_number || addressData?.phone_number}
+        text={orderDetails?.user_delivery_address?.phone_number }
         setText={(e) => dispatch(setOrderDetails({ field: "user_delivery_address.phone_number", value: e.target.value }))}
       />
 

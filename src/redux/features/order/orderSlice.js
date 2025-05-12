@@ -18,6 +18,12 @@ const initialState = {
         subtotal: 0,
         total: 0,
         created_by: null,
+        selected_size_details:{
+            qty: 0,
+            size: "",
+            color: "", 
+            color_code: ""
+        }
     },
     loading: false,
     error: null,
@@ -32,19 +38,14 @@ const orderSlice = createSlice({
             state.completedOrders = [];
         },
         setOrderDetails: (state, action) => {
-            const { field, value } = action.payload;
-
-            const keys = field.split(".");
-            let current = state.orderDetails;
-            for (let i = 0; i < keys.length - 1; i++) {
-                const key = keys[i];
-                if (!current[key]) {
-                    current[key] = {};
-                }
-                current = current[key];
-            }
-
-            current[keys[keys.length - 1]] = value; // Set the final value
+          const { field, value } = action.payload;
+          const keys = field.split(".");
+          let obj = state.orderDetails;
+          for (let i = 0; i < keys.length - 1; i++) {
+            if (!obj[keys[i]]) obj[keys[i]] = {};
+            obj = obj[keys[i]];
+          }
+          obj[keys[keys.length - 1]] = value;
         },
     },
     extraReducers: (builder) => {

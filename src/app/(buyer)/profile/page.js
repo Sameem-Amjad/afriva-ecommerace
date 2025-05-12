@@ -13,8 +13,6 @@ import Settings from "@/components/sections/buyer/profile";
 import PaymentAndTrasaction from "@/components/sections/buyer/payment-method";
 import Orders from "@/components/sections/buyer/orders";
 
-
-
 const tabs = [
   {
     id: "settings",
@@ -39,28 +37,43 @@ const tabs = [
   },
 ];
 
+const getTabIndexById = (id) => tabs.findIndex((tab) => tab.id === id);
+
 const Page = () => {
+  const [selectedTab, setSelectedTab] = useState("settings");
   const [hoveredItem, setHoveredItem] = useState(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.toString().split("?")[1];
+      if (path && getTabIndexById(path) !== -1) {
+        setSelectedTab(path);
+      }
+    }
+  }, []);
 
   return (
     <div className="flex w-full flex-col">
       <div className="h-[120px] w-full"></div>
-
       <div className="flex h-auto w-full flex-col gap-y-10 overflow-visible px-5 pb-10 pt-12 lg:px-20">
         <div className="flex items-center gap-[20px]">
           <h1 className="my-2 text-4xl font-bold">My Profile</h1>
         </div>
         <div className="w-full">
-          <TabGroup className="flex flex-col gap-[25px] md:flex-row">
+          <TabGroup
+            selectedIndex={getTabIndexById(selectedTab)}
+            onChange={(idx) => setSelectedTab(tabs[idx].id)}
+            className="flex flex-col gap-[25px] md:flex-row"
+          >
             <TabList className="flex w-[270px] flex-col gap-4">
-              {tabs.map(({ name, icon, selectedIcon }) => (
+              {tabs.map(({ name, icon, selectedIcon }, idx) => (
                 <Tab
                   key={name}
                   className={({ selected }) =>
-                    `lg:text-[1rem] font-semibold flex outline-none text-grayDark flex-col gap-10 leading-6 transition-all rounded-md pt-3 pb-3 pl-4 pr-4 ${selected
-                      ? "text-primary bg-greenSideMenu"
-                      : "hover:bg-greenSideMenu hover:text-primary"
+                    `lg:text-[1rem] font-semibold flex outline-none text-grayDark flex-col gap-10 leading-6 transition-all rounded-md pt-3 pb-3 pl-4 pr-4 ${
+                      selected
+                        ? "text-primary bg-greenSideMenu"
+                        : "hover:bg-greenSideMenu hover:text-primary"
                     }`
                   }
                   onMouseEnter={() => setHoveredItem(name)}

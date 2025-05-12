@@ -8,7 +8,6 @@ import {
     useElements,
     PaymentElement,
 } from '@stripe/react-stripe-js';
-import Loader from '../Loader/Loader';
 import RoundedButton from '../buttons/RoundedButton';
 import { toast } from 'sonner';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +17,8 @@ import { removeCartItemThunk } from '@/redux/features/cart/cartThunk';
 import { setPaymentHistory } from '@/redux/features/payment/paymentSlice';
 import { addPaymentHistoryThunk } from '@/redux/features/payment/paymentThunk';
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import dynamic from "next/dynamic";
+const Loader = dynamic(() => import("@/components/Loader/Loader"), { ssr: false });
 
 function CheckoutForm({ clientSecret, handleButton, amount }) {
     const stripe = useStripe();
@@ -77,7 +78,7 @@ function CheckoutForm({ clientSecret, handleButton, amount }) {
                         dispatch(setPaymentHistory({ field: "amount", value: amount }));
                         dispatch(setPaymentHistory({ field: "type", value: "stripe" }));
                         dispatch(setPaymentHistory({ field: "created_by", value: item?.created_by }));
-
+                        dispatch(setOrderDetails({ field: "selected_size_details", value: { qty: item.quantity, size: item.selected_size, color: sizeDetail?.colorName, color_code: "#"+item.selected_color } }));
                         dispatch(createNewOrder());
 
                         dispatch(removeCartItemThunk(item?.cart_id));

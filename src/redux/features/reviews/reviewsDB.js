@@ -66,6 +66,29 @@ export const giveReview = async (rating, description, orderId, productId, images
         console.error("Error giving review:", error);
         return null;
     }
+    // {"rating": 5.0, "totalRating": 5.0, "totalReviews": 1}
+
+    // Fetch current overall_rating
+    const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("overall_rating")
+        .eq("id", productId)
+        .single();
+
+    if (!productError && productData && productData.overall_rating) {
+        const current = productData.overall_rating;
+        const newTotalRating = (current.totalRating || 0) + rating;
+        const newTotalReviews = (current.totalReviews || 0) + 1;
+        const newRating = (current.rating + rating) /2
+
+        await supabase.from("products").update({
+            overall_rating: {
+                totalRating: newTotalRating,
+                totalReviews: newTotalReviews,
+                rating: newRating,
+            }
+        }).eq("id", productId);
+    }
 
     // Update product rating logic remains the same
     return data;

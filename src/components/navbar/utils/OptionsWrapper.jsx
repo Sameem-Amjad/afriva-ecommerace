@@ -18,7 +18,7 @@ const OptionsWrapper = () => {
       <Heart />
 
       {/* Notification */}
-      <Notification />
+      {/* <Notification /> */}
 
       {/* Profile */}
       <User />

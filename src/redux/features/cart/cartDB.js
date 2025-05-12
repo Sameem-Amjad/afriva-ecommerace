@@ -36,10 +36,21 @@ export const addToCart = async (userId, productId, quantity, selectedSize, selec
 
 export const getCartItems = async (userId) => {
     try {
-        const { data, error } = await supabase
+        let { data, error } = await supabase
             .from("cart")
             .select("*, products(*)")
-            .eq("user_id", userId);
+            .eq("user_id", userId );
+
+        data.filter((item) => {
+            if (item.product_id === item.products.id) {
+                item.products.size_details = item.products.size_details.filter((size) => {
+                    return size.size == item.selected_size && size.color.replace("#", "") == item.selected_color
+                })
+                if (item.products.size_details?.[0].quantity == "" || item.products.size_details.quantity == 0) {
+                    item.quantity = 0
+                }
+            }
+        })
 
         if (error) {
             throw error;
