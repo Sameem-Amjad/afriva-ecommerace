@@ -10,14 +10,41 @@ import { useDispatch, useSelector } from "react-redux";
 import { signUpConfirmOtp, verifyOtp } from "@/redux/features/auth/authThunk";
 import { toast } from "sonner";
 import { setRegisterFormData } from "@/redux/features/auth/authSlice";
+import axios from "axios";
 
 const VerificationForm = () => {
   const router = useRouter();
-  const {registerFormData,loading} = useSelector((state) => state.users);
+  const [code, setCode] = useState("");
+  const { registerFormData } = useSelector((state) => state.users);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const [reset, setReset] = useState(false);
-  const onSubmit = () => {
-    router.push("/setup-profile");
+  const onSubmit = (code) => {
+    if (!registerFormData?.email || !code) {
+      toast.error("Please enter your email and OTP");
+      return;
+    }
+    axios.post(`/api/verify-otp`, { email: registerFormData?.email, otp: registerFormData?.otp || code }, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        if (res.data.success) {
+          toast.success("OTP verified successfully");
+          setLoading(false);
+          router.push("/setup-profile");
+
+        } else {
+          setLoading(false);
+          toast.error("Invalid OTP, please try again");
+        }
+      })
+      .catch((err) => {
+        console.error(err); // log for debugging
+        setLoading(false);
+        toast.error(err?.response?.data?.message || err?.response?.data?.error || "Something went wrong");
+      });
   };
 
   const handleResend = () => {
@@ -26,15 +53,33 @@ const VerificationForm = () => {
     setReset((prev) => !prev);
   };
 
-  const handleCodeSubmit =async (code) => {
-    dispatch(setRegisterFormData({field:"otp",value:code}));
-    const response = await dispatch(verifyOtp());
-    if(response.error){
-      toast.error("Invalid Otp")
+  const handleCodeSubmit = () => {
+    setLoading(true);
+    dispatch(setRegisterFormData(
+      { ...registerFormData, otp: code }
+    ))
+    if (!registerFormData?.email || !code) {
+      toast.error("Please enter your email and OTP");
       return;
     }
-    toast.success("Otp verified successfully")
-    router.push("/setup-profile");
+    // axios.post(`/api/verify-otp`, { email: registerFormData?.email, otp: code }, {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    // })
+    //   .then((res) => {
+    //     if (res.data.success) {
+    //       toast.success("OTP verified successfully");
+    //       router.push("/setup-profile");
+    //     } else {
+    //       toast.error("Invalid OTP, please try again");
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.error(err); // log for debugging
+    //     toast.error(err?.response?.data?.message || err?.response?.data?.error || "Something went wrong");
+    //   });
+    onSubmit(code);
   };
 
   return (
@@ -43,11 +88,13 @@ const VerificationForm = () => {
         We sent a verification codes to{" "}
         <span className="font-medium">{registerFormData?.email || "your email"}</span>
       </p>
-      <EnterCode callback={handleCodeSubmit} reset={reset} />
+      <EnterCode callback={handleCodeSubmit} reset={reset} code={code} setCode={
+        setCode
+      } />
       <CommonButton
-        onClick={onSubmit}
+        onClick={handleCodeSubmit}
         type="submit"
-        label="Continue"
+        label={loading ? "loading..." : "Continue"}
         className="py-3 text-base "
         disabled={loading}
       />

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { addToCartThunk, getCartItemsThunk, updateCartItemThunk, removeCartItemThunk } from "./cartThunk";
+import { addToCartThunk, getCartItemsThunk, updateCartItemThunk, removeCartItemThunk, checkQuantityThunk } from "./cartThunk";
 
 const initialState = {
     cartItems: [],
@@ -92,7 +92,19 @@ const cartSlice = createSlice({
 
                 state.totalQuantity = state.cartItems.reduce((total, item) => total + item.quantity, 0);
                 state.totalPrice = state.cartItems.reduce((total, item) => total + item.products.price * item.quantity, 0);
+            })
+            .addCase(checkQuantityThunk.fulfilled, (state, action) => {
+                const { productId, selectedSize, selectedColor, quantity } = action.payload;
+                const existingItem = state.cartItems.find((item) => item.product_id === productId && item.selected_size === selectedSize && item.selected_color === selectedColor);
+                if (existingItem && existingItem.quantity < quantity) {
+                    state.error = `Not enough stock for ${existingItem.products.name}`;
+                } else {
+                    state.error = null;
+                }
             });
+
+
+
     },
 });
 

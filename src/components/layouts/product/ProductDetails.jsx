@@ -55,6 +55,10 @@ const ProductDetails = ({ product }) => {
 
   }
 
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedSize])
+
   return (
     <div className="flex flex-col flex-grow sm:w-[48%] w-full">
       {/* title and add to fav */}

@@ -10,7 +10,7 @@ const Step4 = ({ step, setStep }) => {
   const [loading, setLoading] = useState(false);
 
   const handleNext = () => {
-    router.push("/login");
+    router.push("/");
   };
 
   return (

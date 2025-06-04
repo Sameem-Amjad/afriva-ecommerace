@@ -1,11 +1,10 @@
 import CommonButton from "@/components/buttons/CommonButton";
 import EmailField from "@/components/fields/EmailField";
 import PasswordField from "@/components/fields/PasswordField";
-import { logout, updateUserPassword } from "@/redux/features/auth/authThunk";
 import { backArrow, passwordIcon, successIcon, tickIcon } from "@/utils/Svgs";
+import axios from "axios";
 import Link from "next/link";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 
 const Step3 = ({ step, setStep, email }) => {
@@ -15,40 +14,40 @@ const Step3 = ({ step, setStep, email }) => {
     length: false,
     specialChar: true,
   });
-  const {user} = useSelector((state) => state.users);
-  const { loading } = useSelector((state) => state.users);
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
+
   const handleNext = () => {
     if (password.length < 8) {
-      setCondition({ ...condition, length: false });
-      toast.error("Password must be at least 8 characters");
+      toast.warning("Password must be at least 8 characters long");
       return;
     }
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      setCondition({ ...condition, specialChar: false });
-      toast.error("Password must contain at least one special character");
+      toast.warning("Password must contain at least one special character");
       return;
     }
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+      toast.warning("Passwords do not match");
       return;
     }
-    dispatch(
-      updateUserPassword({
-        email:email || user.email,
-        newPassword:password
-      })
-    )
-      .unwrap()
-      .then(() => {
-        toast.success("Password reset successfully");
+
+    setLoading(true);
+    axios.post(`/api/change-password`, {
+      email,
+      password
+    }).then((res) => {
+      setLoading(false);
+      if (res.data.success) {
+        toast.success("password changed successfully");
         setStep(step + 1);
-      })
-      .catch((error) => {
-        toast.error(error);
-        
+      } else {
+        toast.error("can't able to change password, please try again");
+      }
+    })
+      .catch((err) => {
+        setLoading(false);
+        console.error(err); // log for debugging
+        toast.error(err?.response?.data?.message || "Something went wrong");
       });
-      dispatch(logout());
   };
 
   return (

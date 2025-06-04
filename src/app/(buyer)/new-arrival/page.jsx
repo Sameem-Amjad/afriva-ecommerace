@@ -12,11 +12,11 @@ const Page = () => {
 
   const { arrivalProducts, hasMore, loading, error } = useSelector((state) => state.products);
 
-  useEffect(() => {
-    if (error) {
-      toast.error("Failed to fetch products. Please try again.");
-    }
-  }, [error]);
+  // useEffect(() => {
+  //   if (error) {
+  //     toast.error("Failed to fetch products. Please try again.");
+  //   }
+  // }, [error]);
   useEffect(
     () => {
       dispatch(fetchGetNewArrivalPaginatedProducts({ start: start, limit: 25 }));

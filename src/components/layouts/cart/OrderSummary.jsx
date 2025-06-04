@@ -7,12 +7,12 @@ import { useDispatch, useSelector } from "react-redux";
 import { setOrderDetails } from "@/redux/features/order/orderSlice";
 import { createNewOrder } from "@/redux/features/order/orderThunk";
 import { toast } from "sonner";
-import { removeCartItemThunk } from "@/redux/features/cart/cartThunk";
+import { checkQuantityThunk, removeCartItemThunk } from "@/redux/features/cart/cartThunk";
 import { fetchPromoCodeDiscount } from "@/redux/features/promocode/promocodeThunk";
 const OrderSummary = ({ step, setStep }) => {
   const [payment, setPayment] = React.useState(1);
-  const {user} = useSelector((state) => state.users);
-  const {promoCode}= useSelector((state) => state.promoCode);
+  const { user } = useSelector((state) => state.users);
+  const { promoCode } = useSelector((state) => state.promoCode);
   const dispatch = useDispatch();
   const { cartItems } = useSelector((state) => state.cart);
   const { orderDetails } = useSelector((state) => state.orders);
@@ -39,14 +39,78 @@ const OrderSummary = ({ step, setStep }) => {
   const total = subtotal - discount + deliveryFee;
 
 
-  const handleButton = () => {
-    const hasZeroQuantity = cartItems?.some((item) => item.quantity === 0);
-    if (hasZeroQuantity) {
-      const zeroItem = cartItems.find((item) => item.quantity === 0);
-      toast.error(`Please remove ${zeroItem?.products?.name} from cart to proceed furthur. Because it is out of stock.`);
+  const handleButton = async () => {
+
+    if (!cartItems || cartItems.length === 0) {
+      toast.error("Your cart is empty. Please add items to your cart before proceeding.");
       return;
     }
 
+    // 2. Check for zero-quantity items
+    const zeroItem = cartItems.find((item) => item.quantity === 0);
+    if (zeroItem) {
+      toast.error(`Please remove ${zeroItem?.products?.name} from cart to proceed further. Because it is out of stock.`);
+      return;
+    }
+
+    // 3. Check stock for each item (await all checks)
+    let outOfStock = null;
+    for (const item of cartItems) {
+      const available = await dispatch(
+        checkQuantityThunk({
+          productId: item.product_id || item.products.id,
+          selectedSize: item.selected_size,
+          selectedColor: item.selected_color,
+          quantity: item.quantity,
+        })
+      ).unwrap();
+      console.log("sameem", available);
+      if (!available) {
+        outOfStock = item;
+        break;
+      }
+    }
+
+
+
+    //check stock for same item
+    const merged = [];
+    const map = {};
+
+    cartItems.forEach(item => {
+      const key = [
+        item.product_id || item.products.id,
+        item.selected_size,
+        item.selected_color
+      ].join("_");
+
+      if (map[key]) {
+        map[key].quantity += item.quantity;
+      } else {
+        map[key] = { ...item };
+        merged.push(map[key]);
+      }
+    });
+    for (const item of merged) {
+      const available = await dispatch(
+        checkQuantityThunk({
+          productId: item.product_id || item.products.id,
+          selectedSize: item.selected_size,
+          selectedColor: item.selected_color,
+          quantity: item.quantity,
+        })
+      ).unwrap();
+      if (!available) {
+        outOfStock = item;
+        break;
+      }
+    }
+    if (outOfStock) {
+      toast.error(
+        `Not enough stock for ${outOfStock.products?.name} (${outOfStock.selected_size}, ${outOfStock.selected_color}).`
+      );
+      return;
+    }
     if (step === 1) {
       setStep(2);
     } else {
@@ -86,7 +150,7 @@ const OrderSummary = ({ step, setStep }) => {
         dispatch(setOrderDetails({ field: "total", value: (price - itemDiscount) + itemDeliveryFee }));
         dispatch(setOrderDetails({ field: "total_amount", value: (price - itemDiscount) + itemDeliveryFee }));
         dispatch(setOrderDetails({ field: "created_by", value: item?.created_by }));
-        dispatch(setOrderDetails({ field: "selected_size_details", value: { qty: item.quantity, size: item.selected_size, color: sizeDetail?.colorName, color_code: "#"+item.selected_color } }));
+        dispatch(setOrderDetails({ field: "selected_size_details", value: { qty: item.quantity, size: item.selected_size, color: sizeDetail?.colorName, color_code: "#" + item.selected_color } }));
         dispatch(createNewOrder());
         dispatch(removeCartItemThunk(item?.cart_id));
       }

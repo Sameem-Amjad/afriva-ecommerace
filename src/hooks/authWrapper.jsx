@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../../supabase";
 import { setUser } from "@/redux/features/auth/authSlice";
 import { toast } from "sonner";
@@ -26,20 +26,21 @@ export default function AuthWrapper({ children }) {
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
     const { user } = useSelector((state) => state.users);
+    const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
-    const checkAuth = async () => {
+    const checkAuth = useCallback(async () => {
         try {
             setLoading(true);
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-            const isAuthenticated = session && session.user;
-            if(pathname == "/forget-password"){
-                return;
-            }
+            const isAuthenticated = session?.user;
+
+            if (pathname === "/forget-password") return;
+
             if (isAuthenticated) {
                 dispatch(setUser(session.user));
-                if (notAuthenticatedPaths.includes(pathname) ) {
+                if (notAuthenticatedPaths.includes(pathname)) {
                     router.push("/");
                 }
             } else {
@@ -47,24 +48,27 @@ export default function AuthWrapper({ children }) {
                     router.push("/");
                 }
             }
+
+            setHasCheckedAuth(true);
         } catch (error) {
-            toast.error("An error occurred while checking authentication.");
-            setLoading(false);
+            console.error("Auth check error:", error);
+            setHasCheckedAuth(true);
         } finally {
             setLoading(false);
+            setHasCheckedAuth(true);
         }
-    };
+    }, [dispatch, pathname, router]);
 
     useEffect(() => {
         checkAuth();
-    }, [pathname, dispatch]);
+    }, [checkAuth]);
 
     useEffect(() => {
         const { data: listener } = supabase.auth.onAuthStateChange(() => {
             checkAuth();
         });
         return () => listener.subscription.unsubscribe();
-    }, []);
+    }, [checkAuth]);
 
     useEffect(() => {
         if (user?.id) {
@@ -73,6 +77,7 @@ export default function AuthWrapper({ children }) {
         }
     }, [user?.id, dispatch]);
 
-    if (loading) return <Loader />;
+    if (!hasCheckedAuth || loading) return <Loader />;
+
     return <>{children}</>;
 }

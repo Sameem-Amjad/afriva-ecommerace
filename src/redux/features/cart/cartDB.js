@@ -39,7 +39,7 @@ export const getCartItems = async (userId) => {
         let { data, error } = await supabase
             .from("cart")
             .select("*, products(*)")
-            .eq("user_id", userId );
+            .eq("user_id", userId);
 
         data.filter((item) => {
             if (item.product_id === item.products.id) {
@@ -101,3 +101,31 @@ export const removeCartItem = async (cartId) => {
         throw error;
     }
 };
+
+
+export const checkQuantity = async (productId, selectedSize, selectedColor, quantity) => {
+    try {
+        const { data, error } = await supabase
+            .from("products")
+            .select("size_details")
+            .eq("id", productId)
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
+        const sizeDetail = data.size_details.find(
+            (detail) => detail.size === selectedSize && detail.color === selectedColor.replace("#", "")
+        );
+
+        if (!sizeDetail || sizeDetail.quantity < quantity) {
+            return false; // Not enough stock
+        }
+
+        return true; // Enough stock
+    } catch (error) {
+        console.error("Error checking quantity: ", error);
+        throw error;
+    }
+}

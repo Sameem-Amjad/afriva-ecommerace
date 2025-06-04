@@ -119,7 +119,7 @@ const UpdatePassword = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-[172px] rounded-[5px] text-white bg-primary px-[22px] py-[10px] disabled:opacity-50"
+            className="w-[172px] rounded-[5px] text-white bg-primary px-[10px] py-[10px] disabled:opacity-50"
           >
             {loading ? "Updating..." : "Update Password"}
           </button>

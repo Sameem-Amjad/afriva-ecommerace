@@ -1,37 +1,46 @@
 import { pencilIcon, userIcon } from "@/utils/Svgs";
 import Image from "next/image";
 import React from "react";
-import { uploadImage } from "@/redux/features/auth/authDB";
-
+import { } from "@/redux/features/auth/authDB";
 const ProfilePicker = (props) => {
   const [preview, setPreview] = React.useState(null);
   const [uploading, setUploading] = React.useState(false);
+  const [hasMounted, setHasMounted] = React.useState(false);
   const inputRef = React.useRef();
+
+  React.useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const handleImageChange = async (e) => {
     const selectedFile = e.target.files[0];
 
     if (selectedFile) {
-      setPreview(URL.createObjectURL(selectedFile)); // Set preview for the image
-      props.setProfile(selectedFile); // Pass the file to the parent component
+      setPreview(URL.createObjectURL(selectedFile));
+      props.setProfile(selectedFile);
 
       try {
-        setUploading(true); // Set uploading state to true
-        const fileName = `profile_${Date.now()}`; // Generate a unique file name
-        const bucketName = "profile_images"; // Bucket name
-        const path = `${fileName}`; // Path in the bucket
+        setUploading(true);
+        const fileName = `profile_${Date.now()}`;
+        const bucketName = "profile_images";
+        const path = `${fileName}`;
 
-        // Upload the image to the bucket
-        const publicUrl = await uploadImage(selectedFile, bucketName, path);
+        const publicUrl = await (selectedFile, bucketName, path);
 
         if (publicUrl) {
           console.log("Image uploaded successfully:", publicUrl);
-          props.setProfileUrl(publicUrl); // Pass the public URL to the parent component
+          props.setProfileUrl(publicUrl);
         }
       } catch (error) {
         console.error("Error uploading image:", error);
       } finally {
-        setUploading(false); // Reset uploading state
+        setUploading(false);
       }
     }
   };
@@ -42,7 +51,7 @@ const ProfilePicker = (props) => {
       className={`relative bg-secondaryText cursor-pointer rounded-full w-[140px] h-[140px] flex items-center justify-center shadow-profileShadow`}
     >
       <div className="flex w-full h-full overflow-hidden rounded-full items-center justify-center">
-        {preview ? (
+        {hasMounted && preview ? (
           <Image
             src={preview}
             width={140}
@@ -64,7 +73,7 @@ const ProfilePicker = (props) => {
       </div>
       <div className="w-8 h-8 rounded-full bg-primary flex justify-center items-center absolute bottom-2 right-0">
         {uploading ? (
-          <span className="loader"></span> // Add a loader if needed
+          <span className="loader"></span>
         ) : (
           pencilIcon
         )}

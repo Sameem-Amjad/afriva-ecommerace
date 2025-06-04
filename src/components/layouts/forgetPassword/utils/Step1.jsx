@@ -1,34 +1,42 @@
 import CommonButton from "@/components/buttons/CommonButton";
 import EmailField from "@/components/fields/EmailField";
-import { sendForgotPasswordEmail } from "@/redux/features/auth/authThunk";
 import { backArrow, successIcon } from "@/utils/Svgs";
+import axios from "axios";
 import Link from "next/link";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 
-const Step1 = ({ step, setStep ,email,setEmail}) => {
-  
-  const dispatch = useDispatch();
-  const {loading } = useSelector((state) => state.users);
+const Step1 = ({ step, setStep, email, setEmail }) => {
+  const [loading, setLoading] = useState(false);
+
+
   const handleNext = () => {
     if (!email) {
-      toast.error("Please enter your email");
+      toast.warning("Please enter your email");
       return;
     }
-    dispatch(
-      sendForgotPasswordEmail({ email })
-    )
-      .unwrap()
-      .then(() => {
-        toast.success("Email sent successfully");
-        setStep(step + 1);
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast.warning("Please enter a valid email address");
+      return;
+    }
+    setLoading(true);
+    axios.post(`/api/send-otp`, { email })
+      .then((res) => {
+        setLoading(false);
+        if (res.data.success) {
+          console.log(res.data);
+          toast.success(`Otp sent to your email`);
+          setStep(step + 1);
+        } else {
+          toast.error("Failed to send reset instructions");
+        }
       })
       .catch((error) => {
-        toast.error(error);
+        setLoading(false);
+        toast.error("An error occurred while sending reset instructions");
       });
-  };
 
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -43,13 +51,19 @@ const Step1 = ({ step, setStep ,email,setEmail}) => {
       </p>
 
       <div className="w-full mt-8">
-        <EmailField
-          label="Email"
-          name="email"
-          placeholder="Enter email"
-          email={email}
-          setEmail={(e) => setEmail(e.target.value)}
-        />
+        <div className="flex w-full flex-col gap-y-2">
+          <label className="text-base font-medium text-black" htmlFor="email">
+            Email
+          </label>
+          <input
+            name="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={`flex w-full rounded-md border focus:outline-placeholder px-4 py-3 text-xs text-black placeholder:text-placeholder font-medium`}
+            type="email"
+            placeholder="Enter email"
+          />
+        </div>
       </div>
 
       <div className="w-full mt-8">

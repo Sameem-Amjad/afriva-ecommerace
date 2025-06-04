@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import EmailField from "../fields/EmailField";
 import PasswordField from "../fields/PasswordField";
 import Link from "next/link";
@@ -7,29 +7,45 @@ import CommonButton from "../buttons/CommonButton";
 import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { setRegisterFormData } from "@/redux/features/auth/authSlice";
-import { signUpConfirmOtp } from "@/redux/features/auth/authThunk";
 import { toast } from "sonner";
+import axios from "axios";
 const SignupForm = () => {
   const router = useRouter();
-  const dispatch = useDispatch(); 
-  const {registerFormData,loading} = useSelector((state) => state.users);
-
+  const dispatch = useDispatch();
+  const { registerFormData } = useSelector((state) => state.users);
+  const [loading, setLoading] = useState(false);
   const onSubmit = () => {
-    if( registerFormData?.email === "" || registerFormData?.email === null || registerFormData?.password === "" || registerFormData?.password === null || registerFormData?.confirmPassword === "" || registerFormData?.confirmPassword === null){
+    setLoading(true);
+    if (registerFormData?.email === "" || registerFormData?.email === null || registerFormData?.password === "" || registerFormData?.password === null || registerFormData?.confirmPassword === "" || registerFormData?.confirmPassword === null) {
       toast.error("Please fill all the fields")
       return;
     }
 
-    if(registerFormData?.password !== registerFormData?.confirmPassword){
+    if (registerFormData?.password !== registerFormData?.confirmPassword) {
       toast.error("Password and Confirm Password do not match")
       return;
-      }
+    }
     // dispatch(signUpConfirmOtp())
     // toast.success("Check your email for the verification Otp" )
-    router.push("/setup-profile");
+    axios.post(`/api/send-otp`, { email: registerFormData?.email }).then((res) => {
+      if (res.data.success) {
+        toast.success(`Otp sent to your email`);
+        setLoading(false);
+        router.push("/email-verification");
+
+      } else {
+        toast.error("Failed to send reset instructions");
+        setLoading(false);
+      }
+    })
+      .catch((error) => {
+        toast.error("An error occurred while sending reset instructions");
+        setLoading(false);
+      });
+
   };
 
-  const handleInputChange = (field,value) => {
+  const handleInputChange = (field, value) => {
     dispatch(setRegisterFormData({ field, value }));
   };
 
@@ -63,7 +79,7 @@ const SignupForm = () => {
       <CommonButton
         onClick={onSubmit}
         type="submit"
-        label="Continue"
+        label={loading ? "loading..." : "Continue"}
         className="py-3 text-base "
         disabled={loading}
       />

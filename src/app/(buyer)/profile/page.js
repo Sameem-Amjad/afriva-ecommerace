@@ -42,8 +42,9 @@ const getTabIndexById = (id) => tabs.findIndex((tab) => tab.id === id);
 const Page = () => {
   const [selectedTab, setSelectedTab] = useState("settings");
   const [hoveredItem, setHoveredItem] = useState(null);
-
+  const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => {
+    setHasMounted(true);
     if (typeof window !== "undefined") {
       const path = window.location.toString().split("?")[1];
       if (path && getTabIndexById(path) !== -1) {
@@ -51,7 +52,7 @@ const Page = () => {
       }
     }
   }, []);
-
+  if (!hasMounted) return null; // Prevents hydration mismatch
   return (
     <div className="flex w-full flex-col">
       <div className="h-[120px] w-full"></div>
@@ -70,10 +71,9 @@ const Page = () => {
                 <Tab
                   key={name}
                   className={({ selected }) =>
-                    `lg:text-[1rem] font-semibold flex outline-none text-grayDark flex-col gap-10 leading-6 transition-all rounded-md pt-3 pb-3 pl-4 pr-4 ${
-                      selected
-                        ? "text-primary bg-greenSideMenu"
-                        : "hover:bg-greenSideMenu hover:text-primary"
+                    `lg:text-[1rem] font-semibold flex outline-none text-grayDark flex-col gap-10 leading-6 transition-all rounded-md pt-3 pb-3 pl-4 pr-4 ${selected
+                      ? "text-primary bg-greenSideMenu"
+                      : "hover:bg-greenSideMenu hover:text-primary"
                     }`
                   }
                   onMouseEnter={() => setHoveredItem(name)}
