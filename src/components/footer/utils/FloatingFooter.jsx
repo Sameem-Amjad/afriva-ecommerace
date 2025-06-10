@@ -1,8 +1,15 @@
+"use client"
 import RoundedButton from "@/components/buttons/RoundedButton";
 import SubscribeField from "@/components/fields/SubscribeField";
-import React from "react";
+import { subscribeThunk } from "@/redux/features/subscribe/subscribeThunk";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 
 const FloatingFooter = () => {
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState("");
+
   return (
     <div className="w-full lg:px-[100px] md:px-8 px-4 bg-transparent absolute left-0 right-0 -top-[100px]">
       <div className=" w-full bg-footerBg flex-wrap flex flex-row justify-between sm:py-10 py-7 sm:px-16 px-6 rounded-[20px] gap-y-8">
@@ -13,9 +20,29 @@ const FloatingFooter = () => {
         </div>
 
         <div className="flex flex-col lg:w-[30%] sm:w-[40%] w-full gap-y-3.5">
-          <SubscribeField />
+          <SubscribeField email={email} setEmail={setEmail} />
 
           <RoundedButton
+            onClick={async () => {
+              if (email) {
+                const response = await dispatch(subscribeThunk(email));
+                // Check for rejected action
+                if (response.type.endsWith("rejected")) {
+                  toast.error(response.payload || "Subscription failed. Please try again.");
+                  return;
+                }
+                // Check for fulfilled action and payload
+                const { alreadySubscribed } = response.payload || {};
+                if (alreadySubscribed) {
+                  toast.info("You are already subscribed.");
+                } else {
+                  toast.success("Subscribed to newsletter successfully!");
+                  setEmail("");
+                }
+              } else {
+                toast.error("Please enter a valid email address.");
+              }
+            }}
             label="Subscribe to Newsletter"
             className="py-3 bg-white text- border-black border-opacity-10 w-full"
           />

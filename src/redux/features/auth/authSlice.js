@@ -23,13 +23,13 @@ const authSlice = createSlice({
         buyers: null,
         loading: false,
         error: null,
-        isLogin:false,
+        isLogin: false,
         userData: {
             name: null,
             imageUrl: null,
             phoneNumber: null
         },
-        registerFormData:{
+        registerFormData: {
             uid: null,
             name: null,
             email: null,
@@ -37,7 +37,7 @@ const authSlice = createSlice({
             address: null,
             latitude: null,
             longitude: null,
-            provider:"non-social",
+            provider: "non-social",
             password: null,
             confirmPassword: null,
             otp: null,
@@ -46,13 +46,16 @@ const authSlice = createSlice({
             countryid: null,
             username: null,
             phonenumber: null,
-            isactive:true,
+            isactive: true,
             authid: null,
         }
     },
     reducers: {
         setUser: (state, action) => {
             state.user = action.payload;
+        },
+        setBuyers: (state, action) => {
+            state.buyers = action.payload;
         },
         clearUser: (state) => {
             state.user = null;
@@ -89,7 +92,8 @@ const authSlice = createSlice({
             })
             .addCase(signInUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.user = action.payload;
+                state.user = action.payload.user;
+                state.buyers = action.payload.buyer;
             })
             .addCase(signInUser.rejected, (state, action) => {
                 state.loading = false;
@@ -202,7 +206,7 @@ const authSlice = createSlice({
             })
             .addCase(signUpConfirmOtp.fulfilled, (state, action) => {
                 state.loading = false;
-             })
+            })
             .addCase(signUpConfirmOtp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
@@ -235,5 +239,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { setUser, clearUser, setLoading, setUserData ,setRegisterFormData} = authSlice.actions;
+export const { setUser, clearUser, setLoading, setUserData, setRegisterFormData, setBuyers } = authSlice.actions;
 export default authSlice.reducer;

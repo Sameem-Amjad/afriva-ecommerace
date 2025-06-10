@@ -19,7 +19,7 @@ const Footer = () => {
         </div>
 
         <div className="sm:py-6 py-4 flex flex-row sm:justify-between justify-center gap-x-2 flex-wrap border-t border-t-black border-opacity-10 items-center gap-y-[18px]">
-          <p className="opacity-60">Afriva © 2000-2023, All Rights Reserved</p>
+          <p className="opacity-60">Afriva © 2000-{new Date().getFullYear()}, All Rights Reserved</p>
 
           <div className="flex flex-row gap-x-3">
             {cards.map((card, index) => (

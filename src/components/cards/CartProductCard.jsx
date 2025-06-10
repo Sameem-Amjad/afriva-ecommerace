@@ -21,7 +21,7 @@ const CartProductCard = ({ product }) => {
           objectFit="contain"
           width={124}
           height={124}
-          alt={product?.products?.name}
+          alt={product?.products?.name || "N/A"}
         />
       </div>
 

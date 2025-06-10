@@ -46,7 +46,7 @@ export const getCartItems = async (userId) => {
                 item.products.size_details = item.products.size_details.filter((size) => {
                     return size.size == item.selected_size && size.color.replace("#", "") == item.selected_color
                 })
-                if (item.products.size_details?.[0].quantity == "" || item.products.size_details.quantity == 0) {
+                if (item.products.size_details?.[0].stock == "" || item.products.size_details.stock == 0) {
                     item.quantity = 0
                 }
             }
@@ -114,11 +114,11 @@ export const checkQuantity = async (productId, selectedSize, selectedColor, quan
         if (error) {
             throw error;
         }
-
+        // console.log("sameem", productId, selectedSize, selectedColor, quantity, data.size_details)
         const sizeDetail = data.size_details.find(
-            (detail) => detail.size === selectedSize && detail.color === selectedColor.replace("#", "")
+            (detail) => detail.size == selectedSize && detail.color?.replace("#", "") == selectedColor.replace("#", "")
         );
-
+        // console.log("sameem", sizeDetail, quantity)
         if (!sizeDetail || sizeDetail.quantity < quantity) {
             return false; // Not enough stock
         }

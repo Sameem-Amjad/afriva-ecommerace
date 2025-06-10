@@ -89,6 +89,9 @@ const OrderDetails = ({ setState, orderDetail }) => {
                 <Image
                   width={50}
                   height={50}
+                  style={{
+                    height: 50
+                  }}
                   className="rounded-full"
                   src={buyers?.profile_image || "/images/order-avatar.jpeg"}
                   alt="User Profile Avatar"
@@ -257,7 +260,7 @@ const OrderDetails = ({ setState, orderDetail }) => {
               )}
           </div>
         </div>
-        {(orderDetail?.status?.toLowerCase() === "completed") && (
+        {(orderDetail?.status?.toLowerCase() === "completed" || orderDetail?.status?.toLowerCase() === "delivered") && (
           <div className="flex w-full justify-end items-center gap-[19px]">
             <button
               onClick={() => setState("return")}

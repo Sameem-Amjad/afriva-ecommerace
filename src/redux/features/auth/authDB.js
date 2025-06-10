@@ -58,7 +58,16 @@ export const signIn = async (email, password) => {
             throw response.error;
         }
         // console.log("User: ", response.data.user);
-        return response.data.user;
+        const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("uid", response.data.user.id)
+            .single();
+        if (userError) {
+            // console.error("Error fetching user data: ", userError.message);
+            throw userError;
+        }
+        return { user: response.data.user, buyer: userData };
     } catch (error) {
         console.error("Error signing in: ", error.message);
         throw error;
@@ -91,7 +100,7 @@ function dataURLtoFile(dataurl, filename) {
 
 export const addUser = async (registerFormData) => {
     try {
-        let { uid, name, email, profile_image, address, latitude, longitude, provider, password,  accounttype, country, countryid, username, phonenumber } = registerFormData;
+        let { uid, name, email, profile_image, address, latitude, longitude, provider, password, accounttype, country, countryid, username, phonenumber } = registerFormData;
         const { data: userData, error: userError } = await supabase.auth.signUp({
             email,
             password
@@ -317,5 +326,5 @@ export const verifyCode = async (email, code) => {
     //     await supabase.auth.signOut();
     // }
 
-    return { success: true ,user:null};
+    return { success: true, user: null };
 }

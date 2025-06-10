@@ -2,7 +2,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "../../supabase";
-import { setUser } from "@/redux/features/auth/authSlice";
+import { setBuyers, setUser } from "@/redux/features/auth/authSlice";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { getCartItemsThunk } from "@/redux/features/cart/cartThunk";
@@ -25,7 +25,7 @@ export default function AuthWrapper({ children }) {
     const pathname = usePathname();
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
-    const { user } = useSelector((state) => state.users);
+    let { user, buyers } = useSelector((state) => state.users);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
     const checkAuth = useCallback(async () => {
@@ -34,11 +34,13 @@ export default function AuthWrapper({ children }) {
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-            const isAuthenticated = session?.user;
+            buyers = localStorage.getItem("buyers") ? JSON.parse(localStorage.getItem("buyers")) : buyers;
+            const isAuthenticated = session?.user && buyers?.uid;
 
             if (pathname === "/forget-password") return;
 
             if (isAuthenticated) {
+                dispatch(setBuyers(buyers));
                 dispatch(setUser(session.user));
                 if (notAuthenticatedPaths.includes(pathname)) {
                     router.push("/");

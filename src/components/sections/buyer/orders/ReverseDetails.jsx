@@ -23,7 +23,7 @@ const ReverseDetails = ({ setState, orderDetail }) => {
 
         <div className="flex flex-col shadow-md gap-5 px-10 py-5 mx-auto w-full lg:w-[80%] rounded-[12px]">
           {/* <div className="flex justify-center">{packageDelieveryProgress}</div> */}
-          <DelieveryProgress />
+          <DelieveryProgress status={orderDetail?.status?.toLowerCase()} />
         </div>
 
         <h3 className="text-lg font-semibold">

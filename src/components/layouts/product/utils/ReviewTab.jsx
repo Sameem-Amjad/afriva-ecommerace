@@ -15,6 +15,7 @@ const ReviewTab = ({ id }) => {
   const [openModal, setOpenModal] = useState(false);
   const [start, setStart] = useState(0);
   const dispatch = useDispatch();
+  const { buyers } = useSelector((state) => state.users);
   const { productReviews, productReviewsLoading, hasMore, filters } = useSelector((state) => state.products);
 
   useEffect(() => {
@@ -46,12 +47,14 @@ const ReviewTab = ({ id }) => {
           <div className="flex flex-row items-center gap-x-2.5">
             <FilterButton onFilter={handleRatingFilter} />
             <SortDropdown value={filters.sort} setValue={handleSortChange} />
-
-            <RoundedButton
-              onClick={() => setOpenModal(true)}
-              label="Write a Review"
-              className=" bg-black border-black text-white font-medium w-full px-6 py-3.5"
-            />
+            {
+              buyers?.uid &&
+              <RoundedButton
+                onClick={() => setOpenModal(true)}
+                label="Write a Review"
+                className=" bg-black border-black text-white font-medium w-full px-6 py-3.5"
+              />
+            }
           </div>
         </div>
         {/* grid for 2 col and on mobile 1 col */}
@@ -75,7 +78,7 @@ const ReviewTab = ({ id }) => {
             className="py-4 bg-white text- border-black border-opacity-10 sm:w-[218px] w-full"
           />
         </div>
-        <GiveReview isOpen={openModal} closeModal={() => setOpenModal(false)} />
+        <GiveReview isOpen={openModal} closeModal={() => setOpenModal(false)} productId={id} />
       </div>
   );
 };

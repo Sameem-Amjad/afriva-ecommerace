@@ -10,6 +10,7 @@ import orderReducer from "../features/order/orderSlice";
 import returnReducer from "../features/return_products/returnSlice";
 import paymentReducer from "../features/payment/paymentSlice";
 import promoCodeReducer from "../features/promocode/promocodeSlice";
+import subscribeReducer from "../features/subscribe/subscribeSlice";
 const rootReducer = combineReducers({
     users: userReducer,
     home: homeReducer,
@@ -22,6 +23,7 @@ const rootReducer = combineReducers({
     returnRequests: returnReducer,
     payment: paymentReducer,
     promoCode: promoCodeReducer,
+    subscribe: subscribeReducer,
 });
 
 export default rootReducer;

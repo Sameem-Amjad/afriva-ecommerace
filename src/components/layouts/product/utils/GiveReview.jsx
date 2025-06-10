@@ -13,12 +13,14 @@ import React, { Fragment, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { submitReview } from "@/redux/features/reviews/reviewsThunk";
 import { toast } from "sonner";
+import StarButton from "@/components/buttons/starbutton";
 
 const GiveReview = ({ isOpen, closeModal, orderId, productId, sellerName }) => {
   const dispatch = useDispatch();
   const { buyers, user } = useSelector((state) => state.users);
 
   const [rating, setRating] = useState(5); // Default rating
+  const [hoveredRating, setHoveredRating] = useState(null); // For hover effect
   const [reviewText, setReviewText] = useState("");
   const [images, setImages] = useState([]); // Array to hold selected images
   const [previews, setPreviews] = useState([]); // Array to hold image previews
@@ -119,23 +121,18 @@ const GiveReview = ({ isOpen, closeModal, orderId, productId, sellerName }) => {
                 {/* Rating */}
                 <div className="w-full justify-center flex items-center mt-8">
                   <div className="flex flex-col px-14 items-center gap-y-2.5">
-                    <p className="text-center">How would you rate {sellerName}?</p>
-                    <div className="flex flex-row gap-x-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <div
-                          key={star}
-                          onClick={() => setRating(star)}
-                          className={`cursor-pointer ${star <= rating ? "text-yellow-500" : "text-gray-300"
-                            }`}
-                        >
-                          {fullStarIcon}
-                        </div>
-                      ))}
+                    <div className="flex flex-col px-14 items-center gap-y-2.5">
+                      <p className="text-center">How would you rate {sellerName}?</p>
+                      <StarButton
+                        value={rating}
+                        onChange={setRating}
+                        onHover={setHoveredRating}
+                        hoveredValue={hoveredRating}
+                        disabled={loading}
+                      />
                     </div>
                   </div>
                 </div>
-
-                {/* Review Text */}
                 <div className="mt-5 w-full px-7">
                   <ReviewBox
                     label="Review"
@@ -201,7 +198,7 @@ const GiveReview = ({ isOpen, closeModal, orderId, productId, sellerName }) => {
           </div>
         </div>
       </Dialog>
-    </Transition>
+    </Transition >
   );
 };
 

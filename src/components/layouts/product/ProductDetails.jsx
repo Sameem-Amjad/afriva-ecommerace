@@ -126,10 +126,10 @@ const ProductDetails = ({ product }) => {
         <Quantity
           quantity={quantity}
           setQuantity={setQuantity}
-          maxQuantity={selectedDetails?.quantity || 0}
+          maxQuantity={selectedDetails?.stock || 0}
         />
         {
-          selectedDetails?.quantity === 0 || selectedDetails?.quantity === "" ? (
+          selectedDetails?.stock === 0 || selectedDetails?.stock === "" ? (
             <p className="text-red-500 text-sm py-4  w-full text-center font-bold">Out of stock</p>
           ) :
             <RoundedButton

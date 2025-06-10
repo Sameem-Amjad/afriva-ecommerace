@@ -63,6 +63,24 @@ export const getCompletedOrders = async (userId) => {
 };
 
 export const createOrder = async (orderData) => {
+
+    const { data: addressData, error: addressError } = await supabase.from("address").insert([
+        {
+            "user_id": orderData?.user_delivery_address?.user_id,
+            "name": orderData?.user_delivery_address?.name,
+            "country": orderData?.user_delivery_address?.country,
+            "city": orderData?.user_delivery_address?.city,
+            "phone_number": orderData?.user_delivery_address?.phone_number,
+            "address": orderData?.user_delivery_address?.address,
+        }
+    ])
+    if (addressData) {
+        orderData.user_delivery_address = {
+            ...orderData.user_delivery_address,
+            id: addressData[0].id,
+            created_at: new Date(),
+        };
+    }
     const { data, error } = await supabase
         .from("orders")
         .insert([orderData])
@@ -80,9 +98,9 @@ export const createOrder = async (orderData) => {
             return null;
         }
 
-        let {size_details} = productData;
+        let { size_details } = productData;
         size_details = size_details.map((size) => {
-            if (size.size == orderData?.selected_size_details?.size ) {
+            if (size.size == orderData?.selected_size_details?.size) {
                 return { ...size, quantity: size.quantity - orderData?.selected_size_details?.qty };
             }
             return size;

@@ -69,6 +69,9 @@ const OrderDetailsPacked = ({ setState, orderDetail }) => {
                 <Image
                   width={50}
                   height={50}
+                  style={{
+                    height: 50
+                  }}
                   className="rounded-full"
                   src={buyers?.profile_image || "/images/order-avatar.jpeg"}
                   alt="User Profile Avatar"

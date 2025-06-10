@@ -7,13 +7,14 @@ import CommonButton from "../buttons/CommonButton";
 import { useDispatch } from "react-redux";
 import { signInUser } from "@/redux/features/auth/authThunk";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const LoginForm = () => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const dispatch = useDispatch();
-
+  const router = useRouter();
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -23,6 +24,8 @@ const LoginForm = () => {
         toast.error(response.error.message);
       } else {
         toast.success("Login successful!");
+        localStorage.setItem("buyers", JSON.stringify(response.payload.buyer));
+        router.push("/");
       }
     } catch (error) {
       console.error("Login error:", error);

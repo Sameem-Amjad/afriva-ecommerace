@@ -44,9 +44,7 @@ export const giveReview = async (rating, description, orderId, productId, images
             return uploadedImage;
         })
     );
-
-    const imageUrls = uploadedImages.map((img) => img.publicUrl);
-
+    const imageUrls = uploadedImages.map((img) => img);
     const { data, error } = await supabase
         .from("reviews")
         .insert({
@@ -79,7 +77,7 @@ export const giveReview = async (rating, description, orderId, productId, images
         const current = productData.overall_rating;
         const newTotalRating = (current.totalRating || 0) + rating;
         const newTotalReviews = (current.totalReviews || 0) + 1;
-        const newRating = (current.rating + rating) /2
+        const newRating = (current.rating + rating) / 2
 
         await supabase.from("products").update({
             overall_rating: {

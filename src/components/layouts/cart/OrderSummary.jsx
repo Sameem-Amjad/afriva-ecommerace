@@ -64,8 +64,8 @@ const OrderSummary = ({ step, setStep }) => {
           quantity: item.quantity,
         })
       ).unwrap();
-      console.log("sameem", available);
       if (!available) {
+        console.log("sameem", available);
         outOfStock = item;
         break;
       }
@@ -106,6 +106,7 @@ const OrderSummary = ({ step, setStep }) => {
       }
     }
     if (outOfStock) {
+
       toast.error(
         `Not enough stock for ${outOfStock.products?.name} (${outOfStock.selected_size}, ${outOfStock.selected_color}).`
       );
@@ -143,7 +144,7 @@ const OrderSummary = ({ step, setStep }) => {
         const itemDiscount = (parseFloat(sizeDetail?.discount) || 0) / 100;
         const itemDeliveryFee = parseFloat(sizeDetail?.delivery_fee) || 0;
         dispatch(setOrderDetails({ field: "order_id", value: [...Array(5)].map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('').toLowerCase() }));
-        dispatch(setOrderDetails({ field: "user_delivery_address.userId", value: item?.created_by }));
+        dispatch(setOrderDetails({ field: "user_delivery_address.user_id", value: item?.created_by }));
         dispatch(setOrderDetails({ field: "user_delivery_address.created_at", value: new Date() }));
         dispatch(setOrderDetails({ field: "subtotal", value: price }));
         dispatch(setOrderDetails({ field: "delivery_charge", value: itemDeliveryFee }));
