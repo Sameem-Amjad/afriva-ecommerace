@@ -117,6 +117,7 @@ CREATE TABLE afriva.products (
   discount             NUMERIC,
   total_number_of_sell INTEGER NOT NULL DEFAULT 0,
   overall_rating       JSONB NOT NULL DEFAULT '{"rating":0,"totalRating":0,"totalReviews":0}'::jsonb,
+  is_sample            BOOLEAN NOT NULL DEFAULT FALSE,  -- seeded demo product: can't be deleted
   created_by           UUID,
   created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -316,6 +317,9 @@ RETURNS TRIGGER LANGUAGE plpgsql SET search_path = '' AS $$
 DECLARE
   me UUID := auth.uid();
   is_seller_of BOOLEAN;
+  want_pack  TIMESTAMPTZ := NEW.packing_date;
+  want_ship  TIMESTAMPTZ := NEW.shipping_date;
+  want_deliv TIMESTAMPTZ := NEW.delivery_date;
 BEGIN
   -- Server roles and SQL (no user JWT) are unrestricted: seeding, admin.
   IF me IS NULL THEN
@@ -331,7 +335,8 @@ BEGIN
      OR NEW.created_at <> OLD.created_at THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'Order contents can''t be changed';
   END IF;
-  -- Dates follow the status and are stamped here, never taken from a browser.
+  -- Dates change only with their status step. The seller may give the actual
+  -- time, if it falls between the order and tomorrow; otherwise it's now.
   NEW.packing_date := OLD.packing_date;
   NEW.shipping_date := OLD.shipping_date;
   NEW.delivery_date := OLD.delivery_date;
@@ -344,9 +349,15 @@ BEGIN
     OR (OLD.status = 'shipped' AND NEW.status = 'delivered')
     OR (OLD.status = 'return requested' AND NEW.status IN ('return accepted', 'return rejected'))) THEN
     NEW.updated_at := NOW();
-    IF NEW.status = 'packed' THEN NEW.packing_date := NOW(); END IF;
-    IF NEW.status = 'shipped' THEN NEW.shipping_date := NOW(); END IF;
-    IF NEW.status = 'delivered' THEN NEW.delivery_date := NOW(); END IF;
+    IF NEW.status = 'packed' THEN
+      NEW.packing_date := CASE WHEN want_pack BETWEEN OLD.created_at AND NOW() + INTERVAL '1 day' THEN want_pack ELSE NOW() END;
+    END IF;
+    IF NEW.status = 'shipped' THEN
+      NEW.shipping_date := CASE WHEN want_ship BETWEEN OLD.created_at AND NOW() + INTERVAL '1 day' THEN want_ship ELSE NOW() END;
+    END IF;
+    IF NEW.status = 'delivered' THEN
+      NEW.delivery_date := CASE WHEN want_deliv BETWEEN OLD.created_at AND NOW() + INTERVAL '1 day' THEN want_deliv ELSE NOW() END;
+    END IF;
     RETURN NEW;
   END IF;
   IF OLD.created_by = me AND OLD.status IN ('delivered', 'completed') AND NEW.status = 'return requested' THEN
@@ -443,6 +454,25 @@ $$;
 CREATE TRIGGER afriva_new_order BEFORE INSERT ON afriva.orders
   FOR EACH ROW EXECUTE FUNCTION afriva.new_order();
 
+-- Sellers edit their products, but sales counts, ratings, ownership and the
+-- sample flag change only through the functions above (or the seed).
+CREATE FUNCTION afriva.guard_product()
+RETURNS TRIGGER LANGUAGE plpgsql SET search_path = '' AS $$
+BEGIN
+  IF current_user IN ('anon', 'authenticated') THEN
+    NEW.total_number_of_sell := OLD.total_number_of_sell;
+    NEW.overall_rating := OLD.overall_rating;
+    NEW.seller_id := OLD.seller_id;
+    NEW.is_sample := OLD.is_sample;
+    NEW.created_at := OLD.created_at;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER afriva_guard_product BEFORE UPDATE ON afriva.products
+  FOR EACH ROW EXECUTE FUNCTION afriva.guard_product();
+
 -- ────────────────────────────────────────────────────────────
 -- ROW LEVEL SECURITY
 -- ────────────────────────────────────────────────────────────
@@ -474,14 +504,20 @@ CREATE POLICY sellers_insert ON afriva.sellers FOR INSERT TO authenticated
 CREATE POLICY sellers_update ON afriva.sellers FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
 
 CREATE POLICY brands_read ON afriva.brands FOR SELECT TO anon, authenticated USING (TRUE);
-CREATE POLICY brands_write ON afriva.brands FOR ALL TO authenticated
-  USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid() AND afriva.is_seller(auth.uid()));
+CREATE POLICY brands_insert ON afriva.brands FOR INSERT TO authenticated
+  WITH CHECK (seller_id = auth.uid() AND afriva.is_seller(auth.uid()));
+CREATE POLICY brands_update ON afriva.brands FOR UPDATE TO authenticated
+  USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid());
 
 CREATE POLICY categories_read ON afriva.categories FOR SELECT TO anon, authenticated USING (TRUE);
 
 CREATE POLICY products_read ON afriva.products FOR SELECT TO anon, authenticated USING (TRUE);
-CREATE POLICY products_write ON afriva.products FOR ALL TO authenticated
-  USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid() AND afriva.is_seller(auth.uid()));
+CREATE POLICY products_insert ON afriva.products FOR INSERT TO authenticated
+  WITH CHECK (seller_id = auth.uid() AND afriva.is_seller(auth.uid()) AND NOT is_sample);
+CREATE POLICY products_update ON afriva.products FOR UPDATE TO authenticated
+  USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid());
+CREATE POLICY products_delete ON afriva.products FOR DELETE TO authenticated
+  USING (seller_id = auth.uid() AND NOT is_sample);
 
 CREATE POLICY cart_own ON afriva.cart FOR ALL TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
