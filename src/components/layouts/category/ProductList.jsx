@@ -14,15 +14,16 @@ const ProductList = ({ category }) => {
   const [perPage] = useState(9);
   const { products, total, currentPage, filters } = useSelector((state) => state.filters);
   const dispatch = useDispatch();
+  const categoryName = decodeURIComponent(category || "");
   const paginate = (pageNumber) => {
-    dispatch(fetchFilteredProducts({ filters, page: pageNumber, limit: perPage }));
+    dispatch(fetchFilteredProducts({ filters: { ...filters, category: categoryName }, page: pageNumber, limit: perPage }));
     // setCurrentPage(pageNumber);
   };
 
   useEffect(() => {
-    dispatch(fetchFilteredProducts({ filters, page: 1, limit: perPage }));
+    dispatch(fetchFilteredProducts({ filters: { ...filters, category: categoryName }, page: 1, limit: perPage }));
   }
-    , [filters, category, dispatch, perPage]);
+    , [filters, categoryName, dispatch, perPage]);
 
   return (
     <div className="flex flex-row sm:w-[calc(100%-200px)] w-full flex-wrap gap-x-6 justify-between gap-y-6">

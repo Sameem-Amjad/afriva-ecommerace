@@ -19,9 +19,10 @@ const Filters = ({ category }) => {
   const { subCategories, priceRange, colors, filters } = useSelector((state) => state.filters);
   const [value, setValue] = React.useState([(priceRange[0] + 20), (priceRange[1] - 20)]);
   useEffect(() => {
-    dispatch(fetchSubCategories(category));
-    dispatch(fetchPriceRangeByCategory(category));
-    dispatch(fetchColorsByCategory(category));
+    const name = decodeURIComponent(category || "");
+    dispatch(fetchSubCategories(name));
+    dispatch(fetchPriceRangeByCategory(name));
+    dispatch(fetchColorsByCategory(name));
   }, [category, dispatch]);
 
   return (
@@ -46,7 +47,7 @@ const Filters = ({ category }) => {
         label="Apply Filter"
         onClick={() => {
           if (filters.subCategory || filters.color || filters.size || filters.sortBy) {
-            dispatch(fetchFilteredProducts({ filters, page: 1, limit: 10 }));
+            dispatch(fetchFilteredProducts({ filters: { ...filters, category: decodeURIComponent(category || "") }, page: 1, limit: 9 }));
           }
           else {
             toast.error("Please select a filter");

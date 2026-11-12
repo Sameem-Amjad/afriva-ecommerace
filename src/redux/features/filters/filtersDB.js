@@ -14,14 +14,17 @@ export const getSubCategories = async (category) => {
 export const getPriceRangeByCategory = async (category) => {
     const { data, error } = await supabase
         .from("products")
-        .select("price, categories!inner(category_name)")
+        .select("size_details, categories!inner(category_name)")
         .eq("categories.category_name", category);
 
     if (error) throw error;
 
-    const prices = data.map(product => product.price);
-    const minPrice = Math.min(...prices);
-    const maxPrice = Math.max(...prices);
+    const prices = data
+        .flatMap(product => (product.size_details || []).map(detail => parseFloat(detail.price)))
+        .filter(Number.isFinite);
+    if (!prices.length) return [0, 0];
+    const minPrice = Math.floor(Math.min(...prices));
+    const maxPrice = Math.ceil(Math.max(...prices));
 
     return [minPrice, maxPrice];
 }
@@ -42,6 +45,7 @@ export const getColorsByCategory = async (category) => {
     return data;
 }
 export const getFilteredProducts = async ({
+    category,
     subCategory,
     priceRange,
     color,
@@ -52,11 +56,19 @@ export const getFilteredProducts = async ({
     limit = 100
 }) => {
 
-    let { count } = await supabase.from("products").select("*", { count: "exact" });
+    // Only this category's products (the join filters by its name).
+    const select = category ? "*, categories!inner(category_name)" : "*";
+    let countQuery = supabase.from("products").select(select, { count: "exact", head: true });
+    if (category) countQuery = countQuery.eq("categories.category_name", category);
+    if (subCategory) countQuery = countQuery.contains("subcategory", [subCategory]);
+    const { count } = await countQuery;
     let query = supabase
         .from("products")
-        .select("*")
+        .select(select)
         .range((page - 1) * limit, page * limit - 1);
+    if (category) {
+        query = query.eq("categories.category_name", category);
+    }
 
     if (subCategory) {
         query = query.contains("subcategory", [subCategory]);
