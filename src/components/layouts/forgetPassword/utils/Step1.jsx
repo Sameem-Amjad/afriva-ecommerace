@@ -20,20 +20,15 @@ const Step1 = ({ step, setStep, email, setEmail }) => {
       return;
     }
     setLoading(true);
-    axios.post(`/api/send-otp`, { email })
+    axios.post(`/api/send-otp`, { email, purpose: "reset" })
       .then((res) => {
         setLoading(false);
-        if (res.data.success) {
-          console.log(res.data);
-          toast.success(`Otp sent to your email`);
-          setStep(step + 1);
-        } else {
-          toast.error("Failed to send reset instructions");
-        }
+        toast.success(res.data.message || "Check your email for a code");
+        setStep(step + 1);
       })
       .catch((error) => {
         setLoading(false);
-        toast.error("An error occurred while sending reset instructions");
+        toast.error(error?.response?.data?.message || "Couldn't send reset instructions", { duration: 8000 });
       });
 
   };

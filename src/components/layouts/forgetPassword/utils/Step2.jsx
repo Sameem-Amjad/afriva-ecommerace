@@ -5,7 +5,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-const Step2 = ({ step, setStep, email }) => {
+const Step2 = ({ step, setStep, email, setToken }) => {
   const [loading, setLoading] = useState(false);
   const [otp, setOtp] = useState("");
 
@@ -21,15 +21,16 @@ const Step2 = ({ step, setStep, email }) => {
       return;
     }
     setLoading(true);
-    axios.post(`/api/verify-otp`, { email: email, otp: otp }, {
+    axios.post(`/api/verify-otp`, { email: email, otp: otp, purpose: "reset" }, {
       headers: {
         "Content-Type": "application/json",
       },
     })
       .then((res) => {
         setLoading(false);
-        if (res.data.success) {
-          toast.success("OTP verified successfully");
+        if (res.data.success && res.data.token) {
+          setToken(res.data.token);
+          toast.success("Code verified");
           setStep(step + 1);
         } else {
           toast.error("Invalid OTP, please try again");
@@ -37,14 +38,14 @@ const Step2 = ({ step, setStep, email }) => {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(email, otp)
-        console.error(err); // log for debugging
         toast.error(err?.response?.data?.message || "Something went wrong");
       });
   };
 
   const handleResend = () => {
-    console.log("Resend email");
+    axios.post(`/api/send-otp`, { email, purpose: "reset" })
+      .then((res) => toast.success(res.data.message || "We sent a new code"))
+      .catch((err) => toast.error(err?.response?.data?.message || "Couldn't send a new code"));
   };
 
   return (

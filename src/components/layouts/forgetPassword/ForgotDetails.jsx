@@ -9,6 +9,7 @@ import Step4 from "./utils/Step4";
 
 const ForgotDetails = ({ step, setStep }) => {
     const [email, setEmail] = useState("");
+    const [token, setToken] = useState("");
   return (
     <div className="flex lg:w-[70%] md:w-[55%] w-full overflow-hidden py-7 lg:px-8 px-3 justify-center items-center">
       {step == 0 && <Step1 setStep={setStep} step={step} 
@@ -16,11 +17,11 @@ const ForgotDetails = ({ step, setStep }) => {
       />}
 
       {step == 1 && <Step2 setStep={setStep} step={step} 
-      email={email} 
+      email={email} setToken={setToken}
       />}
 
       {step == 2 && <Step3 setStep={setStep} step={step}
-      email={email}
+      email={email} token={token}
       />}
 
       {step == 3 && <Step4 setStep={setStep} step={step} />}

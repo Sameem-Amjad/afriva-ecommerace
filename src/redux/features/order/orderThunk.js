@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { getActiveOrders, getCompletedOrders, createOrder } from "./orderDB";
+import { getActiveOrders, getCompletedOrders, placeOrders } from "./orderDB";
 
 export const fetchActiveOrders = createAsyncThunk(
     "orders/fetchActiveOrders",
@@ -34,14 +34,9 @@ export const fetchCompletedOrders = createAsyncThunk(
 
 export const createNewOrder = createAsyncThunk(
     "orders/createNewOrder",
-    async (_, { getState, rejectWithValue }) => {
+    async ({ userId, address, items, paymentMethod }, { rejectWithValue }) => {
         try {
-            const { orderDetails } = getState().orders;
-            const order = await createOrder(orderDetails);
-            if (!order) {
-                throw new Error("Failed to create order");
-            }
-            return order;
+            return await placeOrders({ userId, address, items, paymentMethod });
         } catch (error) {
             return rejectWithValue(error.message);
         }

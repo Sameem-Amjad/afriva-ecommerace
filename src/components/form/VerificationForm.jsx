@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import EnterCode from "../fields/EnterCode";
 import { backArrow } from "@/utils/Svgs";
 import { useDispatch, useSelector } from "react-redux";
-import { signUpConfirmOtp, verifyOtp } from "@/redux/features/auth/authThunk";
 import { toast } from "sonner";
 import { setRegisterFormData } from "@/redux/features/auth/authSlice";
 import axios from "axios";
@@ -24,7 +23,7 @@ const VerificationForm = () => {
       toast.error("Please enter your email and OTP");
       return;
     }
-    axios.post(`/api/verify-otp`, { email: registerFormData?.email, otp: registerFormData?.otp || code }, {
+    axios.post(`/api/verify-otp`, { email: registerFormData?.email, otp: code || registerFormData?.otp, purpose: "signup" }, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -43,25 +42,27 @@ const VerificationForm = () => {
       .catch((err) => {
         console.error(err); // log for debugging
         setLoading(false);
-        toast.error(err?.response?.data?.message || err?.response?.data?.error || "Something went wrong");
+        toast.error(err?.response?.data?.message || "Something went wrong");
       });
   };
 
   const handleResend = () => {
-    dispatch(signUpConfirmOtp())
-    toast.success("Otp resent successfully")
-    setReset((prev) => !prev);
+    axios.post(`/api/send-otp`, { email: registerFormData?.email, purpose: "signup" })
+      .then((res) => {
+        dispatch(setRegisterFormData({ field: "demoCode", value: res.data.demoCode || "" }));
+        toast.success(res.data.demoCode ? `Demo mode: your new code is ${res.data.demoCode}` : "We sent a new code");
+        setReset((prev) => !prev);
+      })
+      .catch((err) => toast.error(err?.response?.data?.message || "Couldn't send a new code"));
   };
 
   const handleCodeSubmit = () => {
-    setLoading(true);
-    dispatch(setRegisterFormData(
-      { ...registerFormData, otp: code }
-    ))
     if (!registerFormData?.email || !code) {
       toast.error("Please enter your email and OTP");
       return;
     }
+    setLoading(true);
+    dispatch(setRegisterFormData({ field: "otp", value: code }));
     // axios.post(`/api/verify-otp`, { email: registerFormData?.email, otp: code }, {
     //   headers: {
     //     "Content-Type": "application/json",
@@ -88,6 +89,11 @@ const VerificationForm = () => {
         We sent a verification codes to{" "}
         <span className="font-medium">{registerFormData?.email || "your email"}</span>
       </p>
+      {registerFormData?.demoCode ? (
+        <p role="status" className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+          Demo mode: no email is sent. Your code is <span className="font-semibold tracking-widest">{registerFormData.demoCode}</span>
+        </p>
+      ) : null}
       <EnterCode callback={handleCodeSubmit} reset={reset} code={code} setCode={
         setCode
       } />
@@ -102,12 +108,13 @@ const VerificationForm = () => {
       <div className="flex flex-row justify-center gap-x-2">
         <p className="text-secondaryText">
           Didn’t receive the email?
-          <span
+          <button
+            type="button"
             onClick={handleResend}
             className="cursor-pointer font-medium transition-opacity duration-300 ease-in hover:opacity-75 ml-1"
           >
             Click to resend
-          </span>
+          </button>
         </p>
       </div>
       <div className="flex flex-row justify-center gap-x-2">

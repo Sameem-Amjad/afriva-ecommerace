@@ -141,8 +141,8 @@ export const updateUserPassword = createAsyncThunk(
     "auth/updateUserPassword",
     async ({ email, newPassword }, { rejectWithValue }) => {
         try {
-            let { success, user, buyer } = await updatePassword(email, newPassword);
-
+            const { success, user, buyer, error } = await updatePassword(email, newPassword);
+            if (!success) throw error || new Error("Password update failed");
             return { success, user, buyer };
         } catch (error) {
             return rejectWithValue(error.message);

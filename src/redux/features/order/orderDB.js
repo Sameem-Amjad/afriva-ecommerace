@@ -62,62 +62,96 @@ export const getCompletedOrders = async (userId) => {
     return enrichedOrders;
 };
 
-export const createOrder = async (orderData) => {
+const ORDER_ID_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newOrderId = () => {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return "AF-" + Array.from(bytes, (b) => ORDER_ID_CHARS[b % ORDER_ID_CHARS.length]).join("");
+};
 
-    const { data: addressData, error: addressError } = await supabase.from("address").insert([
-        {
-            "user_id": orderData?.user_delivery_address?.user_id,
-            "name": orderData?.user_delivery_address?.name,
-            "country": orderData?.user_delivery_address?.country,
-            "city": orderData?.user_delivery_address?.city,
-            "phone_number": orderData?.user_delivery_address?.phone_number,
-            "address": orderData?.user_delivery_address?.address,
-        }
-    ])
-    if (addressData) {
-        orderData.user_delivery_address = {
-            ...orderData.user_delivery_address,
-            id: addressData[0].id,
-            created_at: new Date(),
-        };
-    }
+/** Reuse the buyer's saved address when it matches, otherwise save it. */
+const saveAddress = async (userId, address) => {
+    const fields = {
+        name: address?.name?.trim() || "",
+        address: address?.address?.trim() || "",
+        city: address?.city?.trim() || "",
+        country: address?.country?.trim() || "",
+        phone_number: address?.phone_number?.trim() || "",
+    };
+    const { data: saved } = await supabase
+        .from("address")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("name", fields.name)
+        .eq("address", fields.address)
+        .eq("city", fields.city)
+        .eq("phone_number", fields.phone_number)
+        .limit(1);
+    if (saved?.length) return saved[0];
     const { data, error } = await supabase
-        .from("orders")
-        .insert([orderData])
-        .select("*");
+        .from("address")
+        .insert({ user_id: userId, ...fields })
+        .select("*")
+        .single();
+    if (error) throw error;
+    return data;
+};
 
-    orderData.product_ids.forEach(async (productId) => {
-        const { data: productData, error: productError } = await supabase
-            .from("products")
+/**
+ * Places one order per cart line. The database prices each order from the
+ * product's own size details and takes the stock in the same step, so a
+ * line that sold out meanwhile is refused instead of oversold.
+ * Returns the placed orders and the lines that failed, with the reason.
+ */
+export const placeOrders = async ({ address, items, paymentMethod = "cash" }) => {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth?.user?.id;
+    if (!userId) throw new Error("Log in to place an order");
+    const saved = await saveAddress(userId, address);
+    const deliveryAddress = {
+        id: saved.id,
+        user_id: userId,
+        name: saved.name,
+        address: saved.address,
+        city: saved.city,
+        country: saved.country,
+        phone_number: saved.phone_number,
+        created_at: saved.created_at,
+    };
+    const placed = [];
+    const failed = [];
+    for (const item of items) {
+        const product = item?.products;
+        const detail = product?.size_details?.find(
+            (d) => d?.size === item?.selected_size && (d?.color || "").replace("#", "").toLowerCase() === (item?.selected_color || "").replace("#", "").toLowerCase()
+        );
+        const { data, error } = await supabase
+            .from("orders")
+            .insert({
+                order_id: newOrderId(),
+                product_ids: [product?.id || item?.product_id],
+                quantity: item.quantity,
+                payment_method: paymentMethod,
+                user_delivery_address: deliveryAddress,
+                selected_size_details: {
+                    qty: item.quantity,
+                    size: item.selected_size,
+                    color: detail?.colorName || "",
+                    color_code: "#" + (item.selected_color || "").replace("#", ""),
+                },
+            })
             .select("*")
-            .eq("id", productId)
             .single();
-
-        if (productError) {
-            console.error("Error fetching product for order:", productError);
-            return null;
+        if (error) {
+            failed.push({ item, message: error.message });
+            continue;
         }
-
-        let { size_details } = productData;
-        size_details = size_details.map((size) => {
-            if (size.size == orderData?.selected_size_details?.size) {
-                return { ...size, quantity: size.quantity - orderData?.selected_size_details?.qty };
-            }
-            return size;
-        });
-        const { error: updateError } = await supabase
-            .from("products")
-            .update({ size_details })
-            .eq("id", productId);
-        if (updateError) {
-            console.error("Error updating product quantity:", updateError);
-            return null;
-        }
-    });
-    if (error) {
-        console.log("Error creating order:", error);
-        return null;
+        placed.push(data);
+        await supabase.from("cart").delete().eq("cart_id", item.cart_id);
     }
-
-    return data[0];
-}
+    const paid = placed.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    if (paymentMethod === "card" && placed.length) {
+        await supabase.from("payment_history").insert({ amount: Math.round(paid * 100) / 100, type: "card", created_by: userId });
+    }
+    return { placed, failed, paid };
+};

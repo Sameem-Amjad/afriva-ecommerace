@@ -7,8 +7,7 @@ import ForgotOverview from "./ForgotOverview";
 import ForgotDetails from "./ForgotDetails";
 
 const ForgotPasswordLayout = () => {
-  const queryStep = Number(window?.location.toString().split("?")[1]);
-  const [step, setStep] = useState(isNaN(queryStep) ? 0 : queryStep);
+  const [step, setStep] = useState(0);
   return (
     <div className="flex flex-row w-full md:h-svh flex-wrap">
       <ForgotOverview step={step} />

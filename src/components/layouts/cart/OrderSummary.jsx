@@ -4,10 +4,9 @@ import PromoField from "@/components/fields/PromoField";
 import StripeForm from "@/components/payment/StripeForm";
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setOrderDetails } from "@/redux/features/order/orderSlice";
-import { createNewOrder } from "@/redux/features/order/orderThunk";
+import { usePlaceOrder } from "@/components/payment/usePlaceOrder";
 import { toast } from "sonner";
-import { checkQuantityThunk, removeCartItemThunk } from "@/redux/features/cart/cartThunk";
+import { checkQuantityThunk } from "@/redux/features/cart/cartThunk";
 import { fetchPromoCodeDiscount } from "@/redux/features/promocode/promocodeThunk";
 const OrderSummary = ({ step, setStep }) => {
   const [payment, setPayment] = React.useState(1);
@@ -65,7 +64,6 @@ const OrderSummary = ({ step, setStep }) => {
         })
       ).unwrap();
       if (!available) {
-        console.log("sameem", available);
         outOfStock = item;
         break;
       }
@@ -119,47 +117,8 @@ const OrderSummary = ({ step, setStep }) => {
     }
   };
 
-  const handleOrder = () => {
-    if (!orderDetails?.user_delivery_address ||
-      !orderDetails.user_delivery_address.name ||
-      !orderDetails.user_delivery_address.address ||
-      !orderDetails.user_delivery_address.city ||
-      !orderDetails.user_delivery_address.phone_number) {
-      toast.error("Please fill in all the required fields.");
-      return;
-    }
-
-    cartItems?.forEach((item) => {
-      dispatch(setOrderDetails({ field: "product_ids", value: [item?.products.id] }));
-      dispatch(setOrderDetails({ field: "quantity", value: item.quantity }));
-      dispatch(setOrderDetails({ field: "payment_method", value: "cash" }));
-      const sizeDetail = item?.products?.size_details?.find(
-        (size) =>
-          size?.size === item?.selected_size &&
-          (size?.color.startsWith("#") ? size?.color : `#${size?.color}`) ===
-          (item?.selected_color.startsWith("#") ? item?.selected_color : `#${item?.selected_color}`)
-      );
-      if (sizeDetail) {
-        const price = parseFloat(sizeDetail.price) || 0;
-        const itemDiscount = (parseFloat(sizeDetail?.discount) || 0) / 100;
-        const itemDeliveryFee = parseFloat(sizeDetail?.delivery_fee) || 0;
-        dispatch(setOrderDetails({ field: "order_id", value: [...Array(5)].map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('').toLowerCase() }));
-        dispatch(setOrderDetails({ field: "user_delivery_address.user_id", value: item?.created_by }));
-        dispatch(setOrderDetails({ field: "user_delivery_address.created_at", value: new Date() }));
-        dispatch(setOrderDetails({ field: "subtotal", value: price }));
-        dispatch(setOrderDetails({ field: "delivery_charge", value: itemDeliveryFee }));
-        dispatch(setOrderDetails({ field: "total", value: (price - itemDiscount) + itemDeliveryFee }));
-        dispatch(setOrderDetails({ field: "total_amount", value: (price - itemDiscount) + itemDeliveryFee }));
-        dispatch(setOrderDetails({ field: "created_by", value: item?.created_by }));
-        dispatch(setOrderDetails({ field: "selected_size_details", value: { qty: item.quantity, size: item.selected_size, color: sizeDetail?.colorName, color_code: "#" + item.selected_color } }));
-        dispatch(createNewOrder());
-        dispatch(removeCartItemThunk(item?.cart_id));
-      }
-    })
-    toast.success("Order placed successfully!");
-    handleButton()
-
-  }
+  const { place, placing } = usePlaceOrder();
+  const handleOrder = () => place("cash");
 
   return (
     <div className="flex flex-col py-5 px-6 md:w-[43%] w-full rounded-[20px] border border-black border-opacity-10 gap-y-6 h-fit">
@@ -211,13 +170,13 @@ const OrderSummary = ({ step, setStep }) => {
                 )}
               </div>
 
-              <p>Bank</p>
+              <p>Card</p>
             </div>
 
             <div className="flex flex-row gap-x-2 ">
               {
                 payment == 0 && (
-                  <StripeForm amount={total} handleButton={handleButton} />
+                  <StripeForm amount={total} />
                 )
               }
             </div>
@@ -254,8 +213,8 @@ const OrderSummary = ({ step, setStep }) => {
         payment == 1 && step === 2 && (
           <RoundedButton
             onClick={handleOrder}
-            // label="Go to Checkout"
-            label={"Place an Order"}
+            disabled={placing}
+            label={placing ? "Placing your order…" : "Place an Order"}
             className=" bg-primary border-primary text-white font-medium px-6 py-3.5"
           />)
       }

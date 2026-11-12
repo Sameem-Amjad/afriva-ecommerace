@@ -1,42 +1,41 @@
-import { NextResponse } from 'next/server';
-import { supabase } from '../../../../supabase';
+import { NextResponse } from "next/server";
+import crypto from "crypto";
+import { isEmail, supabaseAdmin } from "@/lib/server/supabaseAdmin";
+import { makeToken } from "@/lib/server/otpToken";
 
+const MAX_ATTEMPTS = 5;
 
+/** Checks the latest code for this email; returns a short-lived token on success. */
 export async function POST(req) {
-    try {
-        const { email, otp } = await req.json();
-        if (!email || !otp) {
-            return NextResponse.json({ error: 'Email and OTP are required' }, { status: 400 });
-        }
-        const { data, error } = await supabase
-            .from("email_otps")
-            .select("*")
-            .eq("email", email)
-            .eq("otp", otp)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-        if (error || !data) {
-            return NextResponse.json({ message: 'Invalid OTP or email' }, { status: 400 });
-        }
-        if (data.expires_at < new Date().toISOString()) {
-            await supabase
-                .from("email_otps")
-                .delete()
-                .eq("email", email)
-                .eq("otp", otp);
-            return NextResponse.json({ error: 'OTP has expired' }, { status: 400 });
-        }
-        // Optionally, you can delete the OTP after successful verification
-        await supabase
-            .from("email_otps")
-            .delete()
-            .eq("email", email)
-            .eq("otp", otp);
+    const { email: raw, otp, purpose = "signup" } = await req.json().catch(() => ({}));
+    const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+    if (!isEmail(email) || typeof otp !== "string" || !/^\d{4}$/.test(otp)) {
+        return NextResponse.json({ success: false, message: "Enter the 4-digit code" }, { status: 400 });
+    }
 
-        return NextResponse.json({ success: true, message: 'Otp verified successfully' }, { status: 200 });
+    const db = supabaseAdmin();
+    const { data: rows, error } = await db
+        .from("email_otps")
+        .select("id, otp, attempts, verified, expires_at")
+        .eq("email", email)
+        .eq("purpose", purpose)
+        .order("created_at", { ascending: false })
+        .limit(1);
+    const row = rows?.[0];
+    if (error || !row || row.verified) {
+        return NextResponse.json({ success: false, message: "Request a new code" }, { status: 400 });
     }
-    catch (error) {
-        return NextResponse.json({ success: false, error: 'Otp Verification failed' }, { status: 400 });
+    if (new Date(row.expires_at) < new Date()) {
+        return NextResponse.json({ success: false, message: "That code has expired. Request a new one." }, { status: 400 });
     }
+    if (row.attempts >= MAX_ATTEMPTS) {
+        return NextResponse.json({ success: false, message: "Too many wrong tries. Request a new code." }, { status: 429 });
+    }
+    const match = crypto.timingSafeEqual(Buffer.from(row.otp.padEnd(8)), Buffer.from(otp.padEnd(8)));
+    if (!match) {
+        await db.from("email_otps").update({ attempts: row.attempts + 1 }).eq("id", row.id);
+        return NextResponse.json({ success: false, message: "That code isn't right" }, { status: 400 });
+    }
+    await db.from("email_otps").update({ verified: true }).eq("id", row.id);
+    return NextResponse.json({ success: true, message: "Code verified", token: makeToken(email, purpose) });
 }

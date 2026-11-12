@@ -1,13 +1,16 @@
-import { supabase } from "../../../../supabase";
+import { bucket, supabase } from "../../../../supabase";
+import { DEMO_ACCOUNT_LOCKED, isDemoAccount } from "@/utils/demo";
+
+const APP_TAG = { app: "afriva" };
 
 export const signUp = async (registerFormData) => {
     try {
         const { email, password } = registerFormData;
-        console.log(email, password);
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
+                data: APP_TAG,
                 emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/email-verification`,
             }
         });
@@ -58,16 +61,30 @@ export const signIn = async (email, password) => {
             throw response.error;
         }
         // console.log("User: ", response.data.user);
-        const { data: userData, error: userError } = await supabase
+        const authUser = response.data.user;
+        let { data: userData, error: userError } = await supabase
             .from("users")
             .select("*")
-            .eq("uid", response.data.user.id)
-            .single();
-        if (userError) {
-            // console.error("Error fetching user data: ", userError.message);
-            throw userError;
+            .eq("uid", authUser.id)
+            .maybeSingle();
+        if (userError) throw userError;
+        if (!userData) {
+            // One login works across the demo apps on this project: someone who
+            // signed up elsewhere gets an Afriva profile on first login.
+            const name = authUser.user_metadata?.name || authUser.email.split("@")[0];
+            const { data: created, error: createError } = await supabase
+                .from("users")
+                .insert({ uid: authUser.id, authid: authUser.id, email: authUser.email, name, username: name, provider: "email", accounttype: "buyer", createdby: authUser.id, updatedby: authUser.id })
+                .select("*")
+                .single();
+            if (createError) throw createError;
+            userData = created;
         }
-        return { user: response.data.user, buyer: userData };
+        if (userData.isactive === false) {
+            await supabase.auth.signOut();
+            throw new Error("This account was closed.");
+        }
+        return { user: authUser, buyer: userData };
     } catch (error) {
         console.error("Error signing in: ", error.message);
         throw error;
@@ -101,12 +118,19 @@ function dataURLtoFile(dataurl, filename) {
 export const addUser = async (registerFormData) => {
     try {
         let { uid, name, email, profile_image, address, latitude, longitude, provider, password, accounttype, country, countryid, username, phonenumber } = registerFormData;
-        const { data: userData, error: userError } = await supabase.auth.signUp({
+        let { data: userData, error: userError } = await supabase.auth.signUp({
             email,
-            password
-        })
+            password,
+            options: { data: { ...APP_TAG, name } },
+        });
+        if (userError && /already/i.test(userError.message)) {
+            // The email already has a login on this project (another demo app):
+            // the right password links it to a new Afriva profile.
+            ({ data: userData, error: userError } = await supabase.auth.signInWithPassword({ email, password }));
+            if (userError) throw new Error("This email already has an account. Log in with its password.");
+        }
         if (userError) {
-            console.error("Error signing in: ", userError.message);
+            console.error("Error signing up: ", userError.message);
             throw userError;
         }
         uid = userData?.user?.id;
@@ -161,7 +185,7 @@ export const addUser = async (registerFormData) => {
             throw addressError;
         }
 
-        return data;
+        return userData?.user;
     } catch (error) {
         console.error("Error adding user: ", error);
         throw error;
@@ -180,16 +204,20 @@ export const getBuyerById = async (userId) => {
         const { data: addressData, error: addressError } = await supabase
             .from("address")
             .select("*")
-            .eq("user_id", userId).single();
+            .eq("user_id", userId)
+            .order("is_primary", { ascending: false })
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle();
 
         if (addressError) {
             throw addressError;
         }
 
-        data["addressData"] = addressData;
         if (error) {
             throw error;
         }
+        data["addressData"] = addressData;
 
         return data;
     } catch (error) {
@@ -200,16 +228,17 @@ export const getBuyerById = async (userId) => {
 
 export const uploadImage = async (file, bucketName, path) => {
     try {
+        const name = bucket(bucketName);
         const { data, error } = await supabase.storage
-            .from(bucketName)
-            .upload(path, file, { upsert: true });
+            .from(name)
+            .upload(path, file, { upsert: bucketName === "profile_images" });
 
         if (error) {
             throw error;
         }
 
         const { data: imageData } = supabase.storage
-            .from(bucketName)
+            .from(name)
             .getPublicUrl(path);
         return imageData?.publicUrl;
     } catch (error) {
@@ -254,6 +283,10 @@ export const reAuthenticateUser = async (email, oldPassword) => {
 };
 
 export const updatePassword = async (email, newPassword) => {
+    const { data: current } = await supabase.auth.getUser();
+    if (isDemoAccount(current?.user)) {
+        return { success: false, error: new Error(DEMO_ACCOUNT_LOCKED) };
+    }
     const { data, error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
         console.error('Error updating password:', error.message);
@@ -280,25 +313,22 @@ export const logoutUser = async () => {
 }
 
 export const deleteUser = async (userId) => {
-    try {
-        const { error } = await supabase.auth.admin.deleteUser(userId);
-        if (error) {
-            throw error;
-        }
-        const { error: updateError } = await supabase
-            .from("users")
-            .update({ isactive: false })
-            .eq("uid", userId);
-
-        if (updateError) {
-            throw updateError;
-        }
-
-        return true;
-    } catch (error) {
-        console.error("Error deleting user: ", error);
+    const { data: current } = await supabase.auth.getUser();
+    if (isDemoAccount(current?.user)) {
+        throw new Error(DEMO_ACCOUNT_LOCKED);
+    }
+    // Closing an account marks the profile inactive and signs out; the login
+    // itself is shared with the other demo apps on this project.
+    const { error } = await supabase
+        .from("users")
+        .update({ isactive: false, updatedat: new Date().toISOString() })
+        .eq("uid", userId);
+    if (error) {
+        console.error("Error closing account: ", error);
         throw error;
     }
+    await supabase.auth.signOut();
+    return true;
 }
 
 export const forgotPassword = async (email) => {

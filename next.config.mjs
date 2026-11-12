@@ -1,15 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    images: {
-        remotePatterns: [
-            {
-                protocol: 'https',
-                hostname: 'syrjvknsvaviiqokfiyg.supabase.co',
-                pathname: '/storage/v1/object/public/**',
-            },
-        ],
-    },
+    // Product photos come from Supabase storage and are already sized for the
+    // web, so they are served as they are.
+    images: { unoptimized: true },
 };
-
 
 export default nextConfig;

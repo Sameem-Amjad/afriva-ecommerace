@@ -56,7 +56,7 @@ const UpdatePassword = () => {
 
       }
     } catch (error) {
-      toast.error("Failed to update password. Please check your old password and try again.");
+      toast.error(typeof error === "string" && error.includes("demo") ? error : "Failed to update password. Please check your old password and try again.");
       console.error("Error updating password:", error);
     } finally {
       setLoading(false);

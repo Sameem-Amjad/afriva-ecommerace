@@ -7,7 +7,7 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-const Step3 = ({ step, setStep, email }) => {
+const Step3 = ({ step, setStep, email, token }) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [condition, setCondition] = useState({
@@ -32,7 +32,7 @@ const Step3 = ({ step, setStep, email }) => {
 
     setLoading(true);
     axios.post(`/api/change-password`, {
-      email,
+      token,
       password
     }).then((res) => {
       setLoading(false);

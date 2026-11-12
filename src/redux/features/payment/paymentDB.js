@@ -1,40 +1,42 @@
-import { encrypt } from "@/hooks/useEncrypt";
 import { supabase } from "../../../../supabase";
-import { decrypt } from "@/hooks/useDecrypt";
-// Helper function to mask the card number
-const maskCardNumber = (cardNo) => {
-    const lastFourDigits = cardNo.slice(-4);
-    return `******${lastFourDigits}`;
+
+const cardBrand = (number) => {
+    if (/^4/.test(number)) return "Visa";
+    if (/^(5[1-5]|2[2-7])/.test(number)) return "Mastercard";
+    if (/^3[47]/.test(number)) return "American Express";
+    if (/^6(011|5)/.test(number)) return "Discover";
+    return "Card";
 };
 
-
+/**
+ * Saved cards keep only the brand, the last four digits and the expiry. The
+ * full number and the security code are never stored (the database refuses
+ * them too): charging a saved card would go through a payment provider token.
+ */
 export const addPaymentMethod = async (paymentData) => {
     try {
-        console.log("paymentData", paymentData);
-        const encryptedCardNo = encrypt(paymentData.card_no);
-        const encryptedCvc = encrypt(paymentData.cvc);
-
-        const encryptedPaymentData = {
-            ...paymentData,
-            card_no: encryptedCardNo,
-            cvc: encryptedCvc,
+        const number = String(paymentData.card_no || "").replace(/\D/g, "");
+        if (number.length < 12) throw new Error("Enter the full card number");
+        const { data: auth } = await supabase.auth.getUser();
+        const userId = auth?.user?.id;
+        const row = {
+            created_by: userId,
+            card_holder_name: paymentData.card_holder_name,
+            type: cardBrand(number),
+            card_no: "************" + number.slice(-4),
+            expiry: paymentData.expiry,
+            cvc: null,
+            isPrimary: Boolean(paymentData.isPrimary),
         };
-        console.log("encryptedPaymentData", encryptedPaymentData);
-        if (encryptedPaymentData.isPrimary) {
+        if (row.isPrimary) {
             const { error: updateError } = await supabase
                 .from("payment_methods")
                 .update({ isPrimary: false })
-                .eq("created_by", encryptedPaymentData.created_by);
-
+                .eq("created_by", userId);
             if (updateError) throw updateError;
         }
-
-        const { data, error } = await supabase
-            .from("payment_methods")
-            .insert([encryptedPaymentData]);
-
+        const { data, error } = await supabase.from("payment_methods").insert([row]).select("*");
         if (error) throw error;
-
         return data;
     } catch (err) {
         console.error("Error adding payment method:", err.message);
@@ -43,25 +45,17 @@ export const addPaymentMethod = async (paymentData) => {
 };
 
 export const getPaymentMethods = async (userId) => {
-    try {
-        const { data, error } = await supabase
-            .from("payment_methods")
-            .select("*")
-            .eq("created_by", userId);
-
-        if (error) {
-            throw error;
-        }
-
-        return data.map((method) => ({
-            ...method,
-            card_no: maskCardNumber(decrypt(method.card_no)), // Mask the card number for display
-        }));
-    } catch (err) {
-        console.error("Error fetching payment methods:", err.message);
-        throw err;
+    const { data, error } = await supabase
+        .from("payment_methods")
+        .select("*")
+        .eq("created_by", userId)
+        .order("created_at", { ascending: true });
+    if (error) {
+        console.error("Error fetching payment methods:", error.message);
+        throw error;
     }
-}
+    return data;
+};
 
 export const removePaymentMethod = async (id) => {
     try {

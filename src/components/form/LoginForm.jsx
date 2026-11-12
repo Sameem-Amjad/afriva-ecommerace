@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { signInUser } from "@/redux/features/auth/authThunk";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { DEMO_LOGINS, DEMO_MODE } from "@/utils/demo";
 
 const LoginForm = () => {
   const [email, setEmail] = React.useState("");
@@ -16,12 +17,20 @@ const LoginForm = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const handleLogin = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
+    await login(email, password);
+  };
+
+  const login = async (loginEmail, loginPassword) => {
+    if (!loginEmail || !loginPassword) {
+      toast.error("Enter your email and password");
+      return;
+    }
     setLoading(true);
     try {
-      const response = await dispatch(signInUser({ email, password }));
+      const response = await dispatch(signInUser({ email: loginEmail, password: loginPassword }));
       if (response.error) {
-        toast.error(response.error.message);
+        toast.error(typeof response.payload === "string" ? response.payload : "Couldn't log in");
       } else {
         toast.success("Login successful!");
         localStorage.setItem("buyers", JSON.stringify(response.payload.buyer));
@@ -36,6 +45,24 @@ const LoginForm = () => {
 
   return (
     <div className="flex flex-col mt-5 gap-y-4">
+      {DEMO_MODE && (
+        <div className="flex flex-col gap-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm text-amber-900">
+            Demo store: log in as a sample shopper with orders, reviews and a return already on the account, or sign up with any email.
+          </p>
+          {DEMO_LOGINS.map((l) => (
+            <button
+              key={l.email}
+              type="button"
+              disabled={loading}
+              onClick={() => login(l.email, l.password)}
+              className="rounded-full bg-black py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-85 disabled:opacity-60"
+            >
+              Log in as {l.label}
+            </button>
+          ))}
+        </div>
+      )}
       <EmailField
         label="Email"
         name="email"

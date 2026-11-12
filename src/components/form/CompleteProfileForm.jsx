@@ -29,7 +29,7 @@ const CompleteProfileForm = () => {
       dispatch(setRegisterFormData({field:"address", value: address}));
       const response=await dispatch(signUpUser())
       if(response?.error){
-        toast.error("Error completing profile, please try again later")
+        toast.error(response?.payload || "Error completing profile, please try again later")
         return;
       }
       toast.success("Profile completed successfully");

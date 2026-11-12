@@ -52,7 +52,7 @@ export const getProductDetailsById = async (id) => {
 export const getProductReviewsById = async ({ id, start, limit = 10, sort = "latest", rating = null }) => {
     let query = supabase
         .from('reviews')
-        .select('*,users(name,username, full_address)')
+        .select('*')
         .eq('product_id', id)
         .range(start, start + limit - 1);
 

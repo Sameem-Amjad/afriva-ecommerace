@@ -26,7 +26,7 @@ const ReviewCard = ({ className, review }) => {
       </div>
 
       <div className="flex flex-col gap-y-3">
-        <h3 className="text-xl font-bold">{review?.users?.name || review?.users?.full_address?.name || review?.users?.username}</h3>
+        <h3 className="text-xl font-bold">{review?.reviewer_name || "Afriva shopper"}</h3>
         <p className="text-base opacity-60">
           &quot;{review?.description}&quot;
         </p>

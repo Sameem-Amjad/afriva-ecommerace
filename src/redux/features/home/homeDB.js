@@ -1,37 +1,17 @@
 import { supabase } from "../../../../supabase";
 
 export const getHomeData = async () => {
-    // Fetch total brands and their names
-    const { data: brandsData, error: brandsError } = await supabase
-        .from('brands').select('*')
-    if (brandsError) throw brandsError;
-
-    const totalBrands = brandsData.length;
-
-    // Fetch total reviews with total_score > 3
-    const { data: reviewsData, error: reviewsError } = await supabase
-        .from('reviews')
-        .select('review_id')
-        .gt('total_score', 3);
-    if (reviewsError) throw reviewsError;
-
-    const totalReviews = reviewsData.length;
-
-    // Fetch total products
-    const { data: productsData, error: productsError } = await supabase
-        .from('products')
-        .select('id');
-    if (productsError) throw productsError;
-
-    const totalProducts = productsData.length;
-
-    // Return the aggregated data
-    return {
-        totalBrands,
-        totalReviews,
-        totalProducts
+    const count = async (query) => {
+        const { count: n, error } = await query;
+        if (error) throw error;
+        return n || 0;
     };
-
+    const [totalBrands, totalReviews, totalProducts] = await Promise.all([
+        count(supabase.from('brands').select('brand_id', { count: 'exact', head: true })),
+        count(supabase.from('reviews').select('review_id', { count: 'exact', head: true }).gt('total_score', 3)),
+        count(supabase.from('products').select('id', { count: 'exact', head: true })),
+    ]);
+    return { totalBrands, totalReviews, totalProducts };
 };
 
 export const getBrandsImages = async () => {
@@ -55,7 +35,7 @@ export const getBrandsImages = async () => {
 export const newArrivalProducts = async () => {
     const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('*)')
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(4);
     if (productsError) throw productsError;

@@ -15,34 +15,29 @@ const SignupForm = () => {
   const { registerFormData } = useSelector((state) => state.users);
   const [loading, setLoading] = useState(false);
   const onSubmit = () => {
-    setLoading(true);
-    if (registerFormData?.email === "" || registerFormData?.email === null || registerFormData?.password === "" || registerFormData?.password === null || registerFormData?.confirmPassword === "" || registerFormData?.confirmPassword === null) {
+    if (!registerFormData?.email || !registerFormData?.password || !registerFormData?.confirmPassword) {
       toast.error("Please fill all the fields")
       return;
     }
-
+    if (registerFormData.password.length < 8) {
+      toast.error("Use at least 8 characters for your password")
+      return;
+    }
     if (registerFormData?.password !== registerFormData?.confirmPassword) {
       toast.error("Password and Confirm Password do not match")
       return;
     }
-    // dispatch(signUpConfirmOtp())
-    // toast.success("Check your email for the verification Otp" )
-    axios.post(`/api/send-otp`, { email: registerFormData?.email }).then((res) => {
-      if (res.data.success) {
-        toast.success(`Otp sent to your email`);
-        setLoading(false);
-        router.push("/email-verification");
-
-      } else {
-        toast.error("Failed to send reset instructions");
-        setLoading(false);
-      }
+    setLoading(true);
+    axios.post(`/api/send-otp`, { email: registerFormData?.email, purpose: "signup" }).then((res) => {
+      setLoading(false);
+      dispatch(setRegisterFormData({ field: "demoCode", value: res.data.demoCode || "" }));
+      toast.success(res.data.demoCode ? `Demo mode: your code is ${res.data.demoCode}` : "We sent a code to your email", { duration: 8000 });
+      router.push("/email-verification");
     })
       .catch((error) => {
-        toast.error("An error occurred while sending reset instructions");
+        toast.error(error?.response?.data?.message || "Couldn't send a code, try again");
         setLoading(false);
       });
-
   };
 
   const handleInputChange = (field, value) => {

@@ -26,10 +26,16 @@ const DeleteAccountPopup = ({ setDrawerOpen, open }) => {
       toast.error("Please enter your password");
       return;
     };
-    const response = dispatch(reAuthenticate({ email: user.email, password }));
-    if (response.success) {
-      await dispatch(deleteAccount(user?.id));
-      toast.success("Account deleted successfully");
+    const response = await dispatch(reAuthenticate({ email: user.email, password })).unwrap().catch(() => null);
+    if (response?.success) {
+      try {
+        await dispatch(deleteAccount(user?.id)).unwrap();
+      } catch (message) {
+        toast.error(typeof message === "string" ? message : "Couldn't close the account");
+        setDrawerOpen(false);
+        return;
+      }
+      toast.success("Your account is closed");
       router.push("/login")
       setDrawerOpen(false)
     } else {
