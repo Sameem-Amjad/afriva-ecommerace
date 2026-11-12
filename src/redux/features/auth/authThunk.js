@@ -107,7 +107,7 @@ export const updateUserProfile = createAsyncThunk(
         try {
             let imageUrl = userData.imageUrl;
             if (profilePicture) {
-                const imagePath = `${userId}_${new Date().toISOString()}.jpg`;
+                const imagePath = `${userId}/${Date.now()}.jpg`;
                 imageUrl = await uploadImage(profilePicture, "profile_images", imagePath);
             }
 

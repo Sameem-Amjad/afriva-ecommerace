@@ -264,6 +264,12 @@ RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
   SELECT EXISTS (SELECT 1 FROM afriva.sellers s WHERE s.id = uid);
 $$;
 
+-- Is this email on the seller invite list?
+CREATE FUNCTION afriva.is_invited(p_email TEXT)
+RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
+  SELECT p_email IS NOT NULL AND EXISTS (SELECT 1 FROM afriva.referby r WHERE lower(r.seller_mail) = lower(trim(p_email)));
+$$;
+
 -- Does this order contain a product of this seller?
 CREATE FUNCTION afriva.sells_in_order(seller UUID, ids UUID[])
 RETURNS BOOLEAN LANGUAGE SQL STABLE SECURITY DEFINER SET search_path = '' AS $$
@@ -462,11 +468,14 @@ CREATE POLICY address_own ON afriva.address FOR ALL TO authenticated USING (user
 CREATE POLICY address_seller_read ON afriva.address FOR SELECT TO authenticated USING (afriva.is_seller(auth.uid()));
 
 CREATE POLICY sellers_read ON afriva.sellers FOR SELECT TO anon, authenticated USING (TRUE);
-CREATE POLICY sellers_insert ON afriva.sellers FOR INSERT TO authenticated WITH CHECK (id = auth.uid());
+-- Seller accounts are by invitation only.
+CREATE POLICY sellers_insert ON afriva.sellers FOR INSERT TO authenticated
+  WITH CHECK (id = auth.uid() AND afriva.is_invited(auth.jwt()->>'email'));
 CREATE POLICY sellers_update ON afriva.sellers FOR UPDATE TO authenticated USING (id = auth.uid()) WITH CHECK (id = auth.uid());
 
 CREATE POLICY brands_read ON afriva.brands FOR SELECT TO anon, authenticated USING (TRUE);
-CREATE POLICY brands_write ON afriva.brands FOR ALL TO authenticated USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid());
+CREATE POLICY brands_write ON afriva.brands FOR ALL TO authenticated
+  USING (seller_id = auth.uid()) WITH CHECK (seller_id = auth.uid() AND afriva.is_seller(auth.uid()));
 
 CREATE POLICY categories_read ON afriva.categories FOR SELECT TO anon, authenticated USING (TRUE);
 
@@ -514,20 +523,28 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA afriva GRANT ALL ON SEQUENC
 -- ────────────────────────────────────────────────────────────
 -- STORAGE: public buckets (prefixed, the hub's bucket names are shared)
 -- ────────────────────────────────────────────────────────────
-INSERT INTO storage.buckets (id, name, public) VALUES
-  ('afriva-product-images', 'afriva-product-images', TRUE),
-  ('afriva-brand-images',   'afriva-brand-images',   TRUE),
-  ('afriva-profile-images', 'afriva-profile-images', TRUE),
-  ('afriva-review-media',   'afriva-review-media',   TRUE),
-  ('afriva-return-media',   'afriva-return-media',   TRUE)
-ON CONFLICT (id) DO NOTHING;
+-- Images only, up to 5 MB each.
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) VALUES
+  ('afriva-product-images', 'afriva-product-images', TRUE, 5242880, ARRAY['image/*']),
+  ('afriva-brand-images',   'afriva-brand-images',   TRUE, 5242880, ARRAY['image/*']),
+  ('afriva-profile-images', 'afriva-profile-images', TRUE, 5242880, ARRAY['image/*']),
+  ('afriva-review-media',   'afriva-review-media',   TRUE, 5242880, ARRAY['image/*']),
+  ('afriva-return-media',   'afriva-return-media',   TRUE, 5242880, ARRAY['image/*'])
+ON CONFLICT (id) DO UPDATE SET public = EXCLUDED.public, file_size_limit = EXCLUDED.file_size_limit,
+  allowed_mime_types = EXCLUDED.allowed_mime_types;
 
+-- Product photos and brand logos: sellers (and invited sellers signing up).
+-- Profile pictures, review photos and return photos: the user's own folder.
 DROP POLICY IF EXISTS afriva_media_insert ON storage.objects;
 CREATE POLICY afriva_media_insert ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id IN ('afriva-product-images','afriva-brand-images','afriva-profile-images','afriva-review-media','afriva-return-media'));
+  WITH CHECK (
+    (bucket_id = 'afriva-product-images' AND afriva.is_seller(auth.uid()))
+    OR (bucket_id = 'afriva-brand-images' AND (afriva.is_seller(auth.uid()) OR afriva.is_invited(auth.jwt()->>'email')))
+    OR (bucket_id IN ('afriva-profile-images','afriva-review-media','afriva-return-media')
+        AND (storage.foldername(name))[1] = auth.uid()::TEXT));
 DROP POLICY IF EXISTS afriva_media_update ON storage.objects;
 CREATE POLICY afriva_media_update ON storage.objects FOR UPDATE TO authenticated
-  USING (bucket_id = 'afriva-profile-images' AND owner = auth.uid());
+  USING (bucket_id = 'afriva-profile-images' AND (storage.foldername(name))[1] = auth.uid()::TEXT);
 DROP POLICY IF EXISTS afriva_media_read ON storage.objects;
 CREATE POLICY afriva_media_read ON storage.objects FOR SELECT TO anon, authenticated
   USING (bucket_id IN ('afriva-product-images','afriva-brand-images','afriva-profile-images','afriva-review-media','afriva-return-media'));
