@@ -43,7 +43,7 @@ const Navbar = () => {
         {search !== "" && searchProducts.length > 0 && (
           <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-white shadow-lg rounded-lg w-[280px] max-h-[300px] overflow-y-auto z-50">
             {searchProducts.map((product) => (
-              <div key={product.id} onClick={() => router.push(`/product/${product?.id}`)} className="p-2 flex items-center gap-3 hover:bg-gray-100 cursor-pointer">
+              <div key={product.id} onClick={() => { setSearch(""); router.push(`/product/${product?.id}`); }} className="p-2 flex items-center gap-3 hover:bg-gray-100 cursor-pointer">
                 <Image
                   src={product?.product_image?.[0] || null}
                   alt={product?.name}

@@ -5,6 +5,7 @@ import axios from "axios";
 import Link from "next/link";
 import React, { useState } from "react";
 import { toast } from "sonner";
+import { DEMO_MODE } from "@/utils/demo";
 
 const Step1 = ({ step, setStep, email, setEmail }) => {
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,11 @@ const Step1 = ({ step, setStep, email, setEmail }) => {
       <p className="text-base text-text text-center">
         No worries, we’ll send you reset instructions.
       </p>
+      {DEMO_MODE && (
+        <p role="note" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Password reset is off in this demo because it can&apos;t send email. Use the demo login, or sign up with a new account.
+        </p>
+      )}
 
       <div className="w-full mt-8">
         <div className="flex w-full flex-col gap-y-2">

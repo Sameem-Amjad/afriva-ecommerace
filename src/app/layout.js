@@ -5,10 +5,10 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
   title: "Afriva",
-  description: "FIND CLOTHES THAT MATCHES YOUR STYLE",
+  description: "FIND CLOTHES THAT MATCH YOUR STYLE",
   icons: {
     icon: '/images/logo_small.png',
-    shortcut: '/logo_small.png',
+    shortcut: '/images/logo_small.png',
     apple: '/images/logo_small.png'
   },
 };

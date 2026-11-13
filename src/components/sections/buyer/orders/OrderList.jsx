@@ -99,7 +99,7 @@ const OrderList = ({ setState, setOrderDetail }) => {
               </div>
               <div className="flex flex-col items-center justify-between h-full">
                 <div className="rounded-[4px] px-3 py-1 bg-whiteLight">
-                  {order?.products?.length || 0} items
+                  {order?.products?.length || 0} {order?.products?.length === 1 ? "item" : "items"}
                 </div>
                 <button
                   onClick={() => navigateToOrderPage(order)}

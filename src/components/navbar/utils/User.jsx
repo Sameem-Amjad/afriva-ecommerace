@@ -18,7 +18,7 @@ const User = () => {
   const { buyers } = useSelector((state) => state.users);
 
   useEffect(() => {
-    dispatch(fetchBuyerById(user?.id));
+    if (user?.id) dispatch(fetchBuyerById(user.id));
   }, [user?.id, dispatch]);
 
   return (

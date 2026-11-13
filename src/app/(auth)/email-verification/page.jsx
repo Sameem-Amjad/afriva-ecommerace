@@ -1,6 +1,7 @@
 import VerificationForm from "@/components/form/VerificationForm";
 import Image from "next/image";
 import React from "react";
+import { DEMO_MODE } from "@/utils/demo";
 
 const page = () => {
   return (
@@ -19,9 +20,9 @@ const page = () => {
           />
 
           <div className="flex flex-col gap-y-4">
-            <h1 className="font-semibold text-4xl">Check your mail box</h1>
+            <h1 className="font-semibold text-4xl">{DEMO_MODE ? "Enter your code" : "Check your mailbox"}</h1>
             <p className="text-xl text-text">
-              Verify codes delivered to your inbox.
+              {DEMO_MODE ? "This demo shows the code on screen instead of emailing it." : "Enter the code we sent to your inbox."}
             </p>
           </div>
         </div>

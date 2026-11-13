@@ -26,10 +26,9 @@ const page = () => {
               {successIcon}
             </div>
 
-            <h1 className="font-semibold text-4xl pb-3">Successfully</h1>
+            <h1 className="font-semibold text-4xl pb-3">Account created</h1>
             <p className="text-xl text-text">
-              Your account has been successfully created and activated. Please
-              check your email for confirmation
+              Your Afriva account is ready and you&apos;re signed in.
             </p>
 
             <div className="flex flex-row justify-center gap-x-2 mt-20">

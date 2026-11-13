@@ -14,7 +14,7 @@ const importedImages = [Login1, Login2, Login3];
 
 export const metadata = {
   title: "Afriva",
-  description: "FIND CLOTHES THAT MATCHES YOUR STYLE",
+  description: "FIND CLOTHES THAT MATCH YOUR STYLE",
 };
 
 export default function AuthLayout({ children }) {

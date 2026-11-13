@@ -18,7 +18,7 @@ const Col1 = () => {
       />
 
       <p className="mt-4 opacity-60">
-        We have clothes that suits your style and which you’re proud to wear.
+        We have clothes that suit your style and which you’re proud to wear.
         From women to men.
       </p>
 

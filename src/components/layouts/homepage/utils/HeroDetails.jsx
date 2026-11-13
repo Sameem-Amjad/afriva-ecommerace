@@ -15,7 +15,7 @@ const HeroDetails = () => {
     <div className="flex flex-col w-full md:w-[50%] h-full sm:justify-center justify-start sm:gap-y-10 gap-y-6">
       <div className="flex flex-col sm:gap-y-6 gap-5">
         <h1 className="sm:text-6xl text-5xl font-bold ">
-          FIND CLOTHES THAT MATCHES YOUR STYLE
+          FIND CLOTHES THAT MATCH YOUR STYLE
         </h1>
         <p className="opacity-60">
           Browse through our diverse range of meticulously crafted garments,

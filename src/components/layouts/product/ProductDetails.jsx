@@ -1,7 +1,8 @@
 "use client"
+import Image from "next/image";
 import React, { use, useEffect, useState } from "react";
 import AddFav from "./utils/AddFav";
-import { emptyStarIcon, fullStarIcon, halfStarIcon, zaraLargeIcon } from "@/utils/Svgs";
+import { emptyStarIcon, fullStarIcon, halfStarIcon } from "@/utils/Svgs";
 import ColorsWrapper from "./utils/ColorsWrapper";
 import SizeWrapper from "./utils/SizeWrapper";
 import Quantity from "./utils/Quantity";
@@ -31,7 +32,7 @@ const ProductDetails = ({ product }) => {
     } = await supabase.auth.getSession();
     const isAuthenticated = session && session.user;
     if (isAuthenticated) {
-      const response = dispatch(
+      const response = await dispatch(
         addToCartThunk({
           userId: session.user.id,
           productId: product.id,
@@ -41,7 +42,7 @@ const ProductDetails = ({ product }) => {
         })
       )
       if (response.error) {
-        toast.error("Error adding to cart. Please try again.");
+        toast.error(typeof response.payload === "string" ? `Couldn't add to cart: ${response.payload}` : "Error adding to cart. Please try again.");
       } else {
         toast.success("Item added to cart successfully!");
       }
@@ -98,10 +99,11 @@ const ProductDetails = ({ product }) => {
           {/* price */}
           <p className="text-3xl font-bold">${selectedDetails?.price || 0}</p>
         </div>
-        <div className="sm:block hidden">
-
-          {zaraLargeIcon}
-        </div>
+        {product?.brand?.logo_url && (
+          <div className="sm:block hidden">
+            <Image src={product.brand.logo_url} alt={product.brand.name || "Brand"} title={product.brand.name} width={96} height={96} className="h-20 w-20 rounded-full object-contain" />
+          </div>
+        )}
       </div>
 
       <p className="opacity-60 mt-6">
@@ -111,6 +113,7 @@ const ProductDetails = ({ product }) => {
 
       <ColorsWrapper
         colors={[...new Set(product?.size_details?.map((detail) => detail.color))]}
+        names={Object.fromEntries((product?.size_details || []).map((d) => [d.color, d.colorName]))}
         selectedColor={selectedColor}
         setSelectedColor={setSelectedColor}
       />

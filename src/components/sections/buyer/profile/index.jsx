@@ -11,7 +11,7 @@ const Settings = () => {
   const { user } = useSelector((state) => state.users)
 
   useEffect(() => {
-    dispatch(fetchBuyerById(user?.id))
+    if (user?.id) dispatch(fetchBuyerById(user.id))
   }, [dispatch, user?.id])
 
   return (

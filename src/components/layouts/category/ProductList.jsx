@@ -27,11 +27,11 @@ const ProductList = ({ category }) => {
 
   return (
     <div className="flex flex-row sm:w-[calc(100%-200px)] w-full flex-wrap gap-x-6 justify-between gap-y-6">
-      <Header openModal={() => setIsOpen(true)} />
+      <Header title={categoryName} perPage={perPage} openModal={() => setIsOpen(true)} />
 
       <div className="flex flex-row w-full flex-wrap gap-x-6 justify-start gap-y-6">
         {products?.map((product, index) => (
-          <ProductCard key={index} product={product} />
+          <ProductCard key={product?.id || index} product={product} />
         ))}
       </div>
 

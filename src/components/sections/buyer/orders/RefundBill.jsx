@@ -13,7 +13,7 @@ const RefundBill = ({ setState, orderDetail }) => {
 
   const handleNext = () => {
 
-    const refundAmount = (orderDetail?.subtotal / orderDetail?.quantity) * returnRequest.quantity;
+    const refundAmount = (orderDetail?.subtotal / orderDetail?.quantity) * numberOfBags;
 
     dispatch(setReturnRequestField({ field: "refund_amount", value: refundAmount }));
     dispatch(setReturnRequestField({ field: "quantity", value: numberOfBags }));

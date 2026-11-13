@@ -31,6 +31,7 @@ export const getBrandsWithProducts = async (start, limit = 5) => {
         id: brand.brand_id,
         name: brand.name,
         logo_url: brand.logo_url,
+        brandaddress: brand.brandaddress,
         products: brand.products,
     }));
 
@@ -40,7 +41,7 @@ export const getBrandsWithProducts = async (start, limit = 5) => {
 export const getProductDetailsById = async (id) => {
     const { data: productData, error: productError } = await supabase
         .from('products')
-        .select('*')
+        .select('*, brand:brands(name, logo_url)')
         .eq('id', id)
         .single();
 

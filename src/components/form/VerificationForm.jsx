@@ -86,7 +86,7 @@ const VerificationForm = () => {
   return (
     <div className="flex flex-col mt-5 gap-y-8">
       <p className="text-base text-secondaryText">
-        We sent a verification codes to{" "}
+        {registerFormData?.demoCode ? "Enter the code for" : "We sent a verification code to"}{" "}
         <span className="font-medium">{registerFormData?.email || "your email"}</span>
       </p>
       {registerFormData?.demoCode ? (

@@ -23,9 +23,7 @@ export const addToCart = async (userId, productId, quantity, selectedSize, selec
 
         // console.log(data)
 
-        if (error) {
-            return { error };
-        }
+        if (error) throw error;
 
         return data;
     } catch (error) {

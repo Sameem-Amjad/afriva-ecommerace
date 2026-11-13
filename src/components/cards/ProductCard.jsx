@@ -32,6 +32,10 @@ const ProductCard = ({ fav, product }) => {
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onClick={handleClick}
+      onKeyDown={(e) => e.key === "Enter" && router.push(`/product/${product?.id}`)}
+      role="link"
+      tabIndex={0}
+      aria-label={product?.name}
       className="flex flex-col gap-y-4 hover:scale-105 transition-all duration-200 ease-in-out hover:cursor-pointer"
     // href="/product/shirt-133123"
     >
@@ -41,12 +45,13 @@ const ProductCard = ({ fav, product }) => {
           objectFit="contain"
           width={296}
           height={253}
-          alt="Afriva-logo"
+          alt={product?.name || "Product"}
         />
 
         {fav && (
           <div
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => e.stopPropagation()}
+            onMouseUp={(e) => e.stopPropagation()}
             className="absolute top-2 right-2"
           >
             <AddFav id={product?.id} />

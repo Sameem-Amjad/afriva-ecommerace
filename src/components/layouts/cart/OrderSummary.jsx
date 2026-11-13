@@ -158,12 +158,17 @@ const OrderSummary = ({ step, setStep }) => {
 
       {step === 2 && (
         <div className="flex flex-col gap-y-6">
-          <p>Choose Payment Method</p>
-          <div
-            onClick={() => setPayment(0)}
-            className="flex flex-col items-left justify-between cursor-pointer"
-          >
-            <div className=" flex flex-row items-center gap-x-4">
+          <p id="payment-method-label">Choose Payment Method</p>
+          <div role="radiogroup" aria-labelledby="payment-method-label" className="flex flex-col gap-y-6">
+          <div className="flex flex-col items-left justify-between">
+            <div
+              role="radio"
+              aria-checked={payment == 0}
+              tabIndex={0}
+              onClick={() => setPayment(0)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setPayment(0))}
+              className=" flex flex-row items-center gap-x-4 cursor-pointer"
+            >
               <div className="w-6 h-6 bgtra rounded-full border-2 border-black flex justify-center items-center">
                 {payment == 0 && (
                   <div className="min-w-3.5 min-h-3.5 rounded-full bg-black"></div>
@@ -181,11 +186,15 @@ const OrderSummary = ({ step, setStep }) => {
               }
             </div>
           </div>
-          <div
-            onClick={() => setPayment(1)}
-            className="flex flex-row items-center justify-between cursor-pointer"
-          >
-            <div className=" flex flex-row items-center gap-x-4">
+          <div className="flex flex-row items-center justify-between">
+            <div
+              role="radio"
+              aria-checked={payment == 1}
+              tabIndex={0}
+              onClick={() => setPayment(1)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setPayment(1))}
+              className=" flex flex-row items-center gap-x-4 cursor-pointer"
+            >
               <div className="w-6 h-6 bgtra rounded-full border-2 border-black flex justify-center items-center">
                 {payment == 1 && (
                   <div className="min-w-3.5 min-h-3.5 rounded-full bg-black"></div>
@@ -194,6 +203,7 @@ const OrderSummary = ({ step, setStep }) => {
 
               <p>Cash on delivery</p>
             </div>
+          </div>
           </div>
         </div>
       )}

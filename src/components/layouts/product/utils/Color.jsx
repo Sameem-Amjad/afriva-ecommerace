@@ -1,18 +1,23 @@
 import { selectColorIcon } from "@/utils/Svgs";
 import React from "react";
 
-const Color = ({ color, selected, onClick }) => {
+const Color = ({ color, name, selected, onClick }) => {
+  const hex = color.startsWith("#") ? color : `#${color}`;
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className={`w-9 h-9 rounded-full flex justify-center items-center cursor-pointer ${color === "white" || `#${color}` === "#ffffff"
+      aria-label={name || hex}
+      aria-pressed={!!selected}
+      title={name || hex}
+      className={`w-9 h-9 rounded-full flex justify-center items-center cursor-pointer ${color === "white" || hex.toLowerCase() === "#ffffff"
         ? "border border-black text-black"
         : "text-white"
         }`}
-      style={{ backgroundColor: color.startsWith("#") ? color : `#${color}` }}
+      style={{ backgroundColor: hex }}
     >
       {selected && selectColorIcon}
-    </div>
+    </button>
   );
 };
 

@@ -5,7 +5,6 @@ import Browse from "@/components/layouts/homepage/Browse";
 import { fetchGetProductsWithBrandDetails } from "@/redux/features/products/productsThunk";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "sonner";
 
 const Page = () => {
   const dispatch = useDispatch();
@@ -24,27 +23,19 @@ const Page = () => {
         <div className="flex justify-center w-full sm:pb-16 pb-8">
           <h1 className="text-[40px] font-bold">Brands</h1>
         </div>
-        {
-          productsWithBrandDetails?.map((brand, index) => (
-            <BrandWrapper
-              key={index}
-              brand={brand}
-            />
-          ))
-        }
+        <div className="flex w-full flex-col gap-y-16">
+          {productsWithBrandDetails?.map((brand) => (
+            <BrandWrapper key={brand.id} brand={brand} />
+          ))}
+        </div>
 
-        <RoundedButton
-          label="Load More Brands"
-          onClick={() => {
-            if (hasMore == true) {
-              setStart((prev) => prev + 5)
-            } else {
-              toast.error("No more brands to load")
-              return
-            }
-          }}
-          className="py-4 bg-white text- border-black border-opacity-10 sm:w-[218px] w-full sm:mt-16 mt-8"
-        />
+        {hasMore && (
+          <RoundedButton
+            label="Load More Brands"
+            onClick={() => setStart((prev) => prev + 5)}
+            className="py-4 bg-white text- border-black border-opacity-10 sm:w-[218px] w-full sm:mt-16 mt-8"
+          />
+        )}
       </div>
       <Browse />
     </div>

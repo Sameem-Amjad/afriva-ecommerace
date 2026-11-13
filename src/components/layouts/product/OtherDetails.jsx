@@ -14,7 +14,7 @@ const OtherDetails = ({ detail, id }) => {
   const { simillarProducts, simillarProductsLoading } = useSelector((state) => state.products);
 
   useEffect(() => {
-    dispatch(fetchGetSimillarProducts(id));
+    if (id) dispatch(fetchGetSimillarProducts(id));
   }, [id, dispatch]);
   return (
     <div className="w-full sm:mt-20 mt-12">

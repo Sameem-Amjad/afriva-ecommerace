@@ -21,7 +21,8 @@ const CompleteProfileForm = () => {
   const [address, setAddress] = React.useState(registerFormData?.address || "");
   
   const handleComplete =async () => {
-    if(name && number && profileUrl && address){
+    // The photo is optional; the other three are needed for deliveries.
+    if(name && number && address){
       dispatch(setRegisterFormData({field:"username", value: name}));
       dispatch(setRegisterFormData({field:"name", value: name}));
       dispatch(setRegisterFormData({field:"phonenumber", value: number}));
@@ -33,11 +34,10 @@ const CompleteProfileForm = () => {
         return;
       }
       toast.success("Profile completed successfully");
-      // router.push("/success");
+      router.push("/success");
       return;
     }else{
-      toast.error("Please fill in all fields");
-      router.push("/signup");
+      toast.error("Please add your name, phone number and address");
     }
 
   };

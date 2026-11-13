@@ -18,7 +18,7 @@ const Browse = () => {
       <div className="w-full sm:py-[70px] py-10 sm:px-16 px-6  flex flex-col bg-searchBarBg rounded-[40px]">
         <div className="w-full flex justify-center sm:mb-16 mb-7">
           <h2 className="sm:text-[48px] text-2xl font-bold leading-normal">
-            BROWSE BY CATEGTORIES
+            BROWSE BY CATEGORIES
           </h2>
         </div>
 

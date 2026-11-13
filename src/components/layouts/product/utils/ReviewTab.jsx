@@ -19,7 +19,7 @@ const ReviewTab = ({ id }) => {
   const { productReviews, productReviewsLoading, hasMore, filters } = useSelector((state) => state.products);
 
   useEffect(() => {
-    dispatch(fetchGetProductReviewsById({ id, start, limit: 10, ...filters }));
+    if (id) dispatch(fetchGetProductReviewsById({ id, start, limit: 10, ...filters }));
   }, [start, filters, dispatch, id]);
 
   const handleSortChange = (sort) => {

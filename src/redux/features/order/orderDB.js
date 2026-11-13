@@ -5,7 +5,8 @@ export const getActiveOrders = async (userId) => {
         .from("orders")
         .select("*")
         .eq("created_by", userId)
-        .in("status", ["packed", "shipped", "pending", "paid"]);
+        .in("status", ["packed", "shipped", "pending", "paid"])
+        .order("created_at", { ascending: false });
 
     if (ordersError) {
         console.error("Error fetching orders:", ordersError);
@@ -36,7 +37,8 @@ export const getCompletedOrders = async (userId) => {
         .from("orders")
         .select("*")
         .eq("created_by", userId)
-        .in("status", ["completed", "delivered", "return requested", "return accepted", "return rejected"]);
+        .in("status", ["completed", "delivered", "return requested", "return accepted", "return rejected"])
+        .order("created_at", { ascending: false });
 
     if (ordersError) {
         console.error("Error fetching orders:", ordersError);

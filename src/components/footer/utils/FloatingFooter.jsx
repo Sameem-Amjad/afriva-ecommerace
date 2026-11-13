@@ -15,7 +15,7 @@ const FloatingFooter = () => {
       <div className=" w-full bg-footerBg flex-wrap flex flex-row justify-between sm:py-10 py-7 sm:px-16 px-6 rounded-[20px] gap-y-8">
         <div className="sm:w-[60%] w-full">
           <h2 className="text-white md:text-[40px] text-3xl font-bold">
-            STAY UPTO DATE ABOUT OUR LATEST OFFERS
+            STAY UP TO DATE ABOUT OUR LATEST OFFERS
           </h2>
         </div>
 

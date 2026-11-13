@@ -34,14 +34,22 @@ const RefundFileUpload = ({ setState }) => {
     fileInputRef.current.click();
   };
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = React.useState(false);
+  const handleSubmit = async () => {
     if (images.length === 0) {
       toast.error("Please upload at least one image.");
       return;
     }
-    dispatch(addReturnRequestThunk());
-    toast.success("Return request submitted successfully.");
-    setState("list");
+    setSubmitting(true);
+    try {
+      await dispatch(addReturnRequestThunk()).unwrap();
+      toast.success("Return request submitted successfully.");
+      setState("list");
+    } catch (message) {
+      toast.error(typeof message === "string" ? message : "Couldn't submit the return. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -145,9 +153,10 @@ const RefundFileUpload = ({ setState }) => {
         </button>
         <button
           onClick={handleSubmit}
-          className="rounded-[44px] w-[160px] bg-buttonGradient px-[22px] py-[10px] font-semibold text-white"
+          disabled={submitting}
+          className="rounded-[44px] w-[160px] bg-buttonGradient px-[22px] py-[10px] font-semibold text-white disabled:opacity-70"
         >
-          Submit
+          {submitting ? "Submitting…" : "Submit"}
         </button>
       </div>
     </div>

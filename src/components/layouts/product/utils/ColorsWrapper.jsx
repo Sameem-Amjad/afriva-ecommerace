@@ -4,7 +4,7 @@ import Color from "./Color";
 
 // remove with the api data of the product
 // const colors = ["#4F4631", "#314F4A", "#31344F"];
-const ColorsWrapper = ({ colors, selectedColor, setSelectedColor }) => {
+const ColorsWrapper = ({ colors, names = {}, selectedColor, setSelectedColor }) => {
   return (
     <div className="flex flex-col my-6 py-6 gap-y-3.5 border-y border-y-black border-opacity-10">
       <p className="opacity-60">Select Colors</p>
@@ -15,6 +15,7 @@ const ColorsWrapper = ({ colors, selectedColor, setSelectedColor }) => {
             onClick={() => setSelectedColor(color)}
             key={index}
             color={color}
+            name={names[color]}
             selected={selectedColor === color}
           />
 
